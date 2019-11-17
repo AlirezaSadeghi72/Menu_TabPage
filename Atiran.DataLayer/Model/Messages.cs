@@ -14,8 +14,8 @@ namespace Atiran.DataLayer.Model
     
     public partial class Messages
     {
-        public long MessageID { get; set; }
         public string Text { get; set; }
+        public long MessageID { get; set; }
         public int FromTocen { get; set; }
         public int ToTocen { get; set; }
         public bool MessageDeleteFrom { get; set; }

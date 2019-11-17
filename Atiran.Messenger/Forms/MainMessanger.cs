@@ -55,6 +55,7 @@ namespace Atiran.Messenger.Forms
             this.toolStripComboBox1});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.menuStrip1.Size = new System.Drawing.Size(793, 28);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
@@ -89,26 +90,25 @@ namespace Atiran.Messenger.Forms
             this.dockPanel1.Location = new System.Drawing.Point(0, 28);
             this.dockPanel1.Name = "dockPanel1";
             this.dockPanel1.Padding = new System.Windows.Forms.Padding(6);
+            this.dockPanel1.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.dockPanel1.RightToLeftLayout = true;
             this.dockPanel1.ShowAutoHideContentOnHover = false;
             this.dockPanel1.ShowDocumentIcon = true;
-            this.dockPanel1.Size = new System.Drawing.Size(793, 335);
+            this.dockPanel1.Size = new System.Drawing.Size(793, 683);
             this.dockPanel1.TabIndex = 2;
             this.dockPanel1.TabStop = true;
             this.dockPanel1.Theme = this.vS2017LightTheme1;
             // 
             // MainMessanger
             // 
-            this.ClientSize = new System.Drawing.Size(793, 363);
+            this.ClientSize = new System.Drawing.Size(793, 711);
             this.Controls.Add(this.dockPanel1);
             this.Controls.Add(this.menuStrip1);
             this.Font = new System.Drawing.Font("IRANSans(FaNum)", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainMessanger";
-            this.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.RightToLeftLayout = true;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainMessanger_FormClosed);
             this.Load += new System.EventHandler(this.MainMessanger_Load);
             this.menuStrip1.ResumeLayout(false);
@@ -141,6 +141,7 @@ namespace Atiran.Messenger.Forms
 
         private void toolStripComboBox1_TextChanged(object sender, EventArgs e)
         {
+
             toolStripComboBox1.Items.Clear();
             toolStripComboBox1.Items.AddRange(
                 AllUsers.Where(w => w.UserName.Contains(toolStripComboBox1.Text)).ToArray());

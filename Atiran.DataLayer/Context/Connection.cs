@@ -117,7 +117,7 @@ namespace Atiran.DataLayer.Context
         {
             using (var ctx = new DBEntities())
             {
-                return ctx.sal_mali.AsNoTracking().FirstOrDefault(s=>s.sal_maliID == SalMaliID).name;
+                return ctx.sal_mali.AsNoTracking().FirstOrDefault(s => s.sal_maliID == SalMaliID).name;
             }
         }
 
@@ -708,7 +708,7 @@ namespace Atiran.DataLayer.Context
 
         #region Messenger
 
-        private  static PersianCalendar _pc = new PersianCalendar();
+        private static PersianCalendar _pc = new PersianCalendar();
 
         private static List<Users> _allUser;
         public static List<Users> AllUser
@@ -752,23 +752,40 @@ namespace Atiran.DataLayer.Context
             return new List<contacts>();
         }
 
-        public static bool SendMessage(string Text, int UserIDFrom, int UserIDTo)
+        //public static bool SendMessage(string Text, int UserIDFrom, int UserIDTo)
+        //{
+        //    var dt = DateTime.Now;
+        //    var Message = new Message_Temp()
+        //    {
+        //        Text = Text,
+        //        FromTocen = UserIDFrom,
+        //        ToTocen = UserIDTo,
+        //        DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") + "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
+        //        MessageDeleteFrom = false,
+        //        MessageDeleteTo = false,
+        //        MessageID = AllUser.First(f => f.UserID == UserIDFrom).NextMessageID ?? 1,
+        //    };
+        //    try
+        //    {
+        //        sendMessage(Message);
+        //        return true;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return false;
+        //    }
+        //}
+
+        public static bool SendMessage(Message_Temp message)
         {
-            var dt = DateTime.Now;
-            var Message = new Message_Temp()
-            {
-                Text =  Text,
-                FromTocen = UserIDFrom,
-                ToTocen = UserIDTo,
-                DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/"+_pc.GetMonth(dt).ToString("00")+"/"+_pc.GetDayOfMonth(dt).ToString("00") + " "+dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
-                MessageDeleteFrom = false,
-                MessageDeleteTo = false,
-                MessageID = AllUser.First(f=>f.UserID == UserIDFrom).NextMessageID??1,
-            };
             try
             {
-                sendMessage(Message);
-                return true;
+                using (var ctx = new DBMessengerEntities())
+                {
+                    ctx.Message_Temp.Add(message);
+                    ctx.SaveChanges();
+                    return true;
+                }
             }
             catch (Exception)
             {
@@ -776,25 +793,16 @@ namespace Atiran.DataLayer.Context
             }
         }
 
-        private static void sendMessage(Message_Temp message)
-        {
-            using (var ctx = new DBMessengerEntities())
+        public static List<Messages> GetMessages(int UserIDFrom, int UserIDTo)
             {
-                ctx.Message_Temp.Add(message);
-                ctx.SaveChanges();
+                using (var ctx = new DBMessengerEntities())
+                {
+                    //var FirsIdMessageNotRed = ctx.MessageNotRed.AsNoTracking().FirstOrDefault(w => w.ToTocen == UserID).MessageID;
+                    return ctx.Messages.AsNoTracking().Where(w => (w.FromTocen == UserIDFrom && w.ToTocen == UserIDTo )||(w.FromTocen ==UserIDTo && w.ToTocen == UserIDFrom))
+                        .ToList();
+                }
             }
-        }
 
-        public static List<Messages> GetMessages(int UserID)
-        {
-            using (var ctx = new DBMessengerEntities())
-            {
-                //var FirsIdMessageNotRed = ctx.MessageNotRed.AsNoTracking().FirstOrDefault(w => w.ToTocen == UserID).MessageID;
-                return ctx.Messages.AsNoTracking().Where(w => w.FromTocen == UserID || w.ToTocen == UserID)
-                    .ToList();
-            }
+            #endregion
         }
-
-        #endregion
     }
-}
