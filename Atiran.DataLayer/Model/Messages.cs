@@ -20,6 +20,6 @@ namespace Atiran.DataLayer.Model
         public int ToTocen { get; set; }
         public bool MessageDeleteFrom { get; set; }
         public bool MessageDeleteTo { get; set; }
-        public System.DateTime DateTimeSend { get; set; }
+        public string DateTimeSend { get; set; }
     }
 }

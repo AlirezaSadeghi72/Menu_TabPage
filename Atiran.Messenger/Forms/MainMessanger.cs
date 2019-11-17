@@ -21,7 +21,7 @@ namespace Atiran.Messenger.Forms
         private ContactTab _contactTab;
         private ToolStripMenuItem tsmProfile;
         private ToolStripComboBox toolStripComboBox1;
-        private string _UserName;
+        private string _userName;
 
         private List<Users> AllUsers;
         //private DeskTab _deskTab;
@@ -29,8 +29,8 @@ namespace Atiran.Messenger.Forms
         public MainMessanger(string UserName)
         {
             InitializeComponent();
-            _UserName = UserName;
-            _contactTab = new ContactTab(dockPanel1, _UserName);
+            _userName = UserName;
+            _contactTab = new ContactTab(dockPanel1, _userName);
             AllUsers = Connection.AllUser;
         }
 
@@ -165,7 +165,7 @@ namespace Atiran.Messenger.Forms
         {
             if (!MdiChildren.Any(a => a.Text == UserName))
             {
-                var ChatTab = new ChatHistory();
+                var ChatTab = new ChatHistory(_userName);
                 ChatTab.Text = UserName;
                 ChatTab.Show(dockPanel1);
             }

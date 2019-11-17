@@ -17,9 +17,9 @@ namespace Atiran.DataLayer.Model
         public int UserID { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-        public Nullable<short> LastSendMessageID { get; set; }
-        public Nullable<System.DateTime> LastSeenReserve { get; set; }
+        public string LastSeenReserve { get; set; }
         public bool situation { get; set; }
         public Nullable<bool> avtive { get; set; }
+        public Nullable<long> NextMessageID { get; set; }
     }
 }

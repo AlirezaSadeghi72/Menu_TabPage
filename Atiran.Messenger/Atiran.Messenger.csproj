@@ -71,6 +71,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\ChatTabs\ChatHistory.resx">
+      <DependentUpon>ChatHistory.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainMessanger.resx">
       <DependentUpon>MainMessanger.cs</DependentUpon>
     </EmbeddedResource>

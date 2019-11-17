@@ -167,7 +167,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             if (!(((System.Windows.Forms.Form)TopLevelControl).MdiChildren).Any(a => a.Text == UserName))
             {
-                var ChatTab = new ChatHistory();
+                var ChatTab = new ChatHistory(_userName);
                 ChatTab.Text = UserName;
                 ChatTab.Show(_dockPanel);
             }

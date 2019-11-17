@@ -26,14 +26,14 @@
           <Property Name="ToTocen" Type="int" Nullable="false" />
           <Property Name="MessageDeleteFrom" Type="bit" Nullable="false" />
           <Property Name="MessageDeleteTo" Type="bit" Nullable="false" />
-          <Property Name="DateTimeSend" Type="datetime" Nullable="false" />
+          <Property Name="DateTimeSend" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="situation" Type="bit" />
         </EntityType>
         <EntityType Name="MessageNotRed">
           <Key>
             <PropertyRef Name="ID" />
           </Key>
-          <Property Name="ID" Type="int" Nullable="false" />
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="MessageID" Type="bigint" Nullable="false" />
           <Property Name="FromTocen" Type="int" Nullable="false" />
           <Property Name="ToTocen" Type="int" Nullable="false" />
@@ -44,13 +44,13 @@
             <PropertyRef Name="ToTocen" />
             <PropertyRef Name="DateTimeSend" />
           </Key>
-          <Property Name="MessageID" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MessageID" Type="bigint" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
           <Property Name="FromTocen" Type="int" Nullable="false" />
           <Property Name="ToTocen" Type="int" Nullable="false" />
           <Property Name="MessageDeleteFrom" Type="bit" Nullable="false" />
           <Property Name="MessageDeleteTo" Type="bit" Nullable="false" />
-          <Property Name="DateTimeSend" Type="datetime" Nullable="false" />
+          <Property Name="DateTimeSend" Type="nvarchar" MaxLength="20" Nullable="false" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -59,8 +59,8 @@
           <Property Name="UserID" Type="int" Nullable="false" />
           <Property Name="UserName" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="Password" Type="nchar" MaxLength="30" />
-          <Property Name="LastSendMessageID" Type="smallint" />
-          <Property Name="LastSeenReserve" Type="datetime" />
+          <Property Name="NextMessageID" Type="bigint" />
+          <Property Name="LastSeenReserve" Type="nvarchar" MaxLength="20" />
           <Property Name="situation" Type="bit" Nullable="false" />
           <Property Name="avtive" Type="bit" />
         </EntityType>
@@ -84,21 +84,6 @@
           <Property Name="ContactUserID" Type="Int32" Nullable="false" />
           <Property Name="ContactDelete" Type="Boolean" />
         </EntityType>
-        <EntityType Name="Message_Temp">
-          <Key>
-            <PropertyRef Name="FromTocen" />
-            <PropertyRef Name="ToTocen" />
-            <PropertyRef Name="DateTimeSend" />
-          </Key>
-          <Property Name="MessageID" Type="Int64" Nullable="false" />
-          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="FromTocen" Type="Int32" Nullable="false" />
-          <Property Name="ToTocen" Type="Int32" Nullable="false" />
-          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
-          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
-          <Property Name="DateTimeSend" Type="DateTime" Nullable="false" Precision="3" />
-          <Property Name="situation" Type="Boolean" />
-        </EntityType>
         <EntityType Name="MessageNotRed">
           <Key>
             <PropertyRef Name="ID" />
@@ -108,20 +93,6 @@
           <Property Name="FromTocen" Type="Int32" Nullable="false" />
           <Property Name="ToTocen" Type="Int32" Nullable="false" />
         </EntityType>
-        <EntityType Name="Messages">
-          <Key>
-            <PropertyRef Name="FromTocen" />
-            <PropertyRef Name="ToTocen" />
-            <PropertyRef Name="DateTimeSend" />
-          </Key>
-          <Property Name="MessageID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="FromTocen" Type="Int32" Nullable="false" />
-          <Property Name="ToTocen" Type="Int32" Nullable="false" />
-          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
-          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
-          <Property Name="DateTimeSend" Type="DateTime" Nullable="false" Precision="3" />
-        </EntityType>
         <EntityType Name="Users">
           <Key>
             <PropertyRef Name="UserID" />
@@ -129,18 +100,47 @@
           <Property Name="UserID" Type="Int32" Nullable="false" />
           <Property Name="UserName" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="Password" Type="String" MaxLength="30" FixedLength="true" Unicode="true" />
-          <Property Name="LastSendMessageID" Type="Int16" />
-          <Property Name="LastSeenReserve" Type="DateTime" Precision="3" />
+          <Property Name="LastSeenReserve" Type="String" MaxLength="20" Unicode="true" FixedLength="false" />
           <Property Name="situation" Type="Boolean" Nullable="false" />
           <Property Name="avtive" Type="Boolean" />
+          <Property Name="NextMessageID" Type="Int64" />
         </EntityType>
         <EntityContainer Name="DBMessengerEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Contacts" EntityType="Self.Contacts" />
-          <EntitySet Name="Message_Temp" EntityType="Self.Message_Temp" />
           <EntitySet Name="MessageNotRed" EntityType="Self.MessageNotRed" />
-          <EntitySet Name="Messages" EntityType="Self.Messages" />
           <EntitySet Name="Users" EntityType="Self.Users" />
+          <EntitySet Name="Message_Temp" EntityType="DBMessengerModel.Message_Temp" />
+          <EntitySet Name="Messages" EntityType="DBMessengerModel.Messages" />
         </EntityContainer>
+        <EntityType Name="Message_Temp">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="Int64" Nullable="false" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FromTocen" Type="Int32" Nullable="false" />
+          <Property Name="ToTocen" Type="Int32" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
+          <Property Name="DateTimeSend" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="situation" Type="Boolean" />
+        </EntityType>
+        <EntityType Name="Messages">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FromTocen" Type="Int32" Nullable="false" />
+          <Property Name="ToTocen" Type="Int32" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
+          <Property Name="DateTimeSend" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -157,20 +157,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Message_Temp">
-            <EntityTypeMapping TypeName="DBMessengerModel.Message_Temp">
-              <MappingFragment StoreEntitySet="Message_Temp">
-                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
-                <ScalarProperty Name="Text" ColumnName="Text" />
-                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
-                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
-                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
-                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
-                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
-                <ScalarProperty Name="situation" ColumnName="situation" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="MessageNotRed">
             <EntityTypeMapping TypeName="DBMessengerModel.MessageNotRed">
               <MappingFragment StoreEntitySet="MessageNotRed">
@@ -181,29 +167,43 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Messages">
-            <EntityTypeMapping TypeName="DBMessengerModel.Messages">
-              <MappingFragment StoreEntitySet="Messages">
-                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
-                <ScalarProperty Name="Text" ColumnName="Text" />
-                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
-                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
-                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
-                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
-                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="Users">
             <EntityTypeMapping TypeName="DBMessengerModel.Users">
               <MappingFragment StoreEntitySet="Users">
+                <ScalarProperty Name="NextMessageID" ColumnName="NextMessageID" />
                 <ScalarProperty Name="avtive" ColumnName="avtive" />
                 <ScalarProperty Name="UserID" ColumnName="UserID" />
                 <ScalarProperty Name="UserName" ColumnName="UserName" />
                 <ScalarProperty Name="Password" ColumnName="Password" />
-                <ScalarProperty Name="LastSendMessageID" ColumnName="LastSendMessageID" />
                 <ScalarProperty Name="LastSeenReserve" ColumnName="LastSeenReserve" />
                 <ScalarProperty Name="situation" ColumnName="situation" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Message_Temp">
+            <EntityTypeMapping TypeName="DBMessengerModel.Message_Temp">
+              <MappingFragment StoreEntitySet="Message_Temp">
+                <ScalarProperty Name="situation" ColumnName="situation" />
+                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
+                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
+                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
+                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
+                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Messages">
+            <EntityTypeMapping TypeName="DBMessengerModel.Messages">
+              <MappingFragment StoreEntitySet="Messages">
+                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
+                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
+                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
+                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
+                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

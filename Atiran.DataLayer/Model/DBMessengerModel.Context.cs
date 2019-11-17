@@ -26,9 +26,9 @@ namespace Atiran.DataLayer.Model
         }
     
         public virtual DbSet<Contacts> Contacts { get; set; }
-        public virtual DbSet<Message_Temp> Message_Temp { get; set; }
         public virtual DbSet<MessageNotRed> MessageNotRed { get; set; }
-        public virtual DbSet<Messages> Messages { get; set; }
         public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<Message_Temp> Message_Temp { get; set; }
+        public virtual DbSet<Messages> Messages { get; set; }
     }
 }
