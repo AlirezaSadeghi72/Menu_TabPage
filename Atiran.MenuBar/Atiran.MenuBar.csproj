@@ -133,6 +133,10 @@
       <Project>{53f8991e-065c-408c-886b-66133f5c8268}</Project>
       <Name>Atiran.DataLayer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Atiran.Messenger\Atiran.Messenger.csproj">
+      <Project>{42d94242-56c4-4b19-bebd-f5df696a9964}</Project>
+      <Name>Atiran.Messenger</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Atiran.Reporting\Atiran.Reporting.csproj">
       <Project>{a31f7f98-f78f-4e85-9c1f-fb6308cb2fc6}</Project>
       <Name>Atiran.Reporting</Name>

@@ -10,6 +10,7 @@ using Atiran.DataLayer.Services;
 using Atiran.MenuBar.Class;
 using Atiran.MenuBar.Forms;
 using Atiran.MenuBar.Properties;
+using Atiran.Messenger.Forms;
 using Atiran.Utility.Docking2;
 using Atiran.Utility.Docking2.Desk;
 using Atiran.Utility.MassageBox;
@@ -42,6 +43,8 @@ namespace Atiran.MenuBar.Panels
         private ToolStripMenuItem miRestartApplication;
         private bool isCLoseAll = false;
         private bool isCanselCLoseAll = false;
+        private Label btnMessenger;
+        private Label label4;
         private List<Form> deskTabs;
 
         public MainButton()
@@ -102,6 +105,8 @@ namespace Atiran.MenuBar.Panels
             this.lblClose = new System.Windows.Forms.PictureBox();
             this.lblMinimis = new System.Windows.Forms.Label();
             this.lblMaximis = new System.Windows.Forms.Label();
+            this.btnMessenger = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.msUserActivs.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.lblClose)).BeginInit();
             this.SuspendLayout();
@@ -321,14 +326,42 @@ namespace Atiran.MenuBar.Panels
             this.lblMaximis.MouseEnter += new System.EventHandler(this.label_MouseEnter);
             this.lblMaximis.MouseLeave += new System.EventHandler(this.label_MouseLeave);
             // 
+            // btnMessenger
+            // 
+            this.btnMessenger.BackColor = System.Drawing.Color.Transparent;
+            this.btnMessenger.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnMessenger.Font = new System.Drawing.Font("IRANSans(FaNum)", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnMessenger.Location = new System.Drawing.Point(781, 0);
+            this.btnMessenger.Name = "btnMessenger";
+            this.btnMessenger.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.btnMessenger.Size = new System.Drawing.Size(150, 36);
+            this.btnMessenger.TabIndex = 7;
+            this.btnMessenger.Text = "پيام ها";
+            this.btnMessenger.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.btnMessenger.Click += new System.EventHandler(this.btnMessenger_Click);
+            this.btnMessenger.MouseEnter += new System.EventHandler(this.label_MouseEnter);
+            this.btnMessenger.MouseLeave += new System.EventHandler(this.label_MouseLeave);
+            // 
+            // label4
+            // 
+            this.label4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(81)))), ((int)(((byte)(100)))));
+            this.label4.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.label4.Font = new System.Drawing.Font("IRANSans(FaNum)", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(932, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(3, 38);
+            this.label4.TabIndex = 11;
+            // 
             // MainButton
             // 
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(21)))), ((int)(((byte)(100)))), ((int)(((byte)(123)))));
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.lblClose);
             this.Controls.Add(this.lblDateTime);
             this.Controls.Add(this.lblSalMali);
             this.Controls.Add(this.btnLine);
             this.Controls.Add(this.label10);
+            this.Controls.Add(this.btnMessenger);
             this.Controls.Add(this.btnShortcutDesk);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label8);
@@ -487,9 +520,7 @@ namespace Atiran.MenuBar.Panels
             int Msg, int wParam, int lParam);
         [DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
-
-
-
+        
         private void MainButton_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -497,6 +528,11 @@ namespace Atiran.MenuBar.Panels
                 ReleaseCapture();
                 SendMessage(((Form)TopLevelControl).Handle, 0x00A1, 0x2, 0);
             }
+        }
+        private void btnMessenger_Click(object sender, EventArgs e)
+        {
+            MainMessanger messanger = new MainMessanger(miUserActivs.Text);
+            messanger.ShowDialog();
         }
 
         #endregion
