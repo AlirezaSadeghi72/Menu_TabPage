@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using Atiran.DataLayer.Model;
 using Atiran.DataLayer.Services;
+using contacts = Atiran.DataLayer.Services.Messenger.contacts;
 
 namespace Atiran.DataLayer.Context
 {
@@ -700,6 +701,52 @@ namespace Atiran.DataLayer.Context
         //        return result.ToList();
         //    }
         //}
+
+        #endregion
+
+        #region Messenger
+
+        private static List<Users> _allUser;
+        public static List<Users> AllUser
+        {
+            get
+            {
+                if (_allUser == null)
+                {
+                    using (var ctx = new DBMessengerEntities())
+                    {
+                        _allUser = ctx.Users.ToList();
+                    }
+                }
+
+                return _allUser;
+            }
+        }
+
+        public static List<contacts> GetHistoryContactse(string UserName)
+        {
+            using (var ctx = new DBMessengerEntities())
+            {
+                var User = _allUser?.FirstOrDefault(w => w.UserName == UserName);
+                if (User != null)
+                {
+                    var listUserHistory = ctx.Contacts.AsNoTracking().Where(w => (w.UserID == User.UserID && w.ContactDelete != true)).ToList();
+
+                    var MessageNotRed = ctx.MessageNotRed.AsNoTracking().Where(w => (w.ToTocen == User.UserID)).ToList();
+
+                    return listUserHistory.Select(s => new contacts()
+                    {
+                        ID = s.UserID,
+                        UserName = _allUser.FirstOrDefault(w => w.UserID == s.UserID).UserName,
+                        situation = _allUser.FirstOrDefault(w => w.UserID == s.UserID).situation,
+                        MessageNotRed = MessageNotRed.Count(c => c.FromTocen == s.ContactUserID)
+                    }).ToList();
+                }
+            }
+
+
+            return new List<contacts>();
+        }
 
         #endregion
     }

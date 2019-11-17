@@ -57,6 +57,24 @@
     <Compile Include="Model\act_zirsarfasls.cs">
       <DependentUpon>DBModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Model\Contacts.cs">
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DBMessengerModel.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DBMessengerModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DBMessengerModel.Designer.cs">
+      <DependentUpon>DBMessengerModel.edmx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Model\DBMessengerModel1.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Model\DBModel.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -81,6 +99,15 @@
     <Compile Include="Model\Menu.cs">
       <DependentUpon>DBModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Model\MessageNotRed.cs">
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Messages.cs">
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Message_Temp.cs">
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Model\overal_setting.cs">
       <DependentUpon>DBModel.tt</DependentUpon>
     </Compile>
@@ -98,6 +125,9 @@
     </Compile>
     <Compile Include="Model\UserFavorite.cs">
       <DependentUpon>DBModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Users.cs">
+      <DependentUpon>DBMessengerModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Model\USP_GetDataForSarfasl_Result.cs">
       <DependentUpon>DBModel.tt</DependentUpon>
@@ -120,6 +150,7 @@
     <Compile Include="Services\ActiveUsers.cs" />
     <Compile Include="Services\ActZirSarfaslService.cs" />
     <Compile Include="Services\GroupSarfaslServes.cs" />
+    <Compile Include="Services\Messenger\contacts.cs" />
     <Compile Include="Services\SarfaslService.cs" />
     <Compile Include="Services\SZAservice.cs" />
     <Compile Include="Services\UserShortcut.cs" />
@@ -140,12 +171,29 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.Config" />
+    <EntityDeploy Include="Model\DBMessengerModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>DBMessengerModel.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="Model\DBMessengerModel.edmx.diagram">
+      <DependentUpon>DBMessengerModel.edmx</DependentUpon>
+    </None>
     <None Include="Model\DBModel.edmx.diagram">
       <DependentUpon>DBModel.edmx</DependentUpon>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Model\DBMessengerModel.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>DBMessengerModel.edmx</DependentUpon>
+      <LastGenOutput>DBMessengerModel.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Model\DBMessengerModel.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>DBMessengerModel.edmx</DependentUpon>
+      <LastGenOutput>DBMessengerModel1.cs</LastGenOutput>
+    </Content>
     <Content Include="Model\DBModel.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>DBModel.Context.cs</LastGenOutput>
@@ -165,5 +213,6 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
