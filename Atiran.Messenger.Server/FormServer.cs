@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -9,6 +13,17 @@ namespace Atiran.Messenger.Server
 {
     public class FormServer : Form
     {
+        private object listlocker = new Object();
+        private object sendlocker = new Object();
+        private object receivelocker = new Object();
+        TcpListener server;
+        Socket client;
+        Thread serverTh;
+        Thread clientTh;
+        Hashtable HT = new Hashtable();
+        string serverIP = IPAddress.Any.ToString();
+        string serverPort = "9090";
+
         public FormServer()
         {
             InitializeComponent();
@@ -82,6 +97,7 @@ namespace Atiran.Messenger.Server
             this.buttonStart.TabIndex = 1;
             this.buttonStart.Text = "Start";
             this.buttonStart.UseVisualStyleBackColor = true;
+            this.buttonStart.Click += new System.EventHandler(this.buttonStart_Click);
             // 
             // tableLayoutPanel1
             // 
@@ -127,8 +143,8 @@ namespace Atiran.Messenger.Server
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Calibri", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -150,12 +166,14 @@ namespace Atiran.Messenger.Server
             this.listBoxUser.Name = "listBoxUser";
             this.listBoxUser.Size = new System.Drawing.Size(226, 416);
             this.listBoxUser.TabIndex = 1;
+            this.listBoxUser.SizeChanged += new System.EventHandler(this.listBoxUser_SizeChanged);
             // 
             // FormServer
             // 
             this.ClientSize = new System.Drawing.Size(400, 470);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "FormServer";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormServer_FormClosing);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
@@ -165,5 +183,216 @@ namespace Atiran.Messenger.Server
             this.ResumeLayout(false);
 
         }
+
+        #region Event
+
+        private void buttonStart_Click(object sender, EventArgs e)
+        {
+            serverPort = textBox1.Text;
+            CheckForIllegalCrossThreadCalls = false;
+            serverTh = new Thread(serverRoutine);
+            serverTh.IsBackground = true;
+            serverTh.Start();
+            buttonStart.Enabled = false;
+        }
+        private void listBoxUser_SizeChanged(object sender, EventArgs e)
+        {
+            //فردي انلاين شده
+            //sendToAll("0" + "|server|" + getOnlineList());
+        }
+        private void FormServer_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Application.ExitThread();
+        }
+
+        #endregion
+
+
+        #region Method
+
+        private void serverRoutine()
+        {
+            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(serverIP), int.Parse(serverPort));
+            server = new TcpListener(EP);
+            server.Start(100);
+            while (true)
+            {
+                client = server.AcceptSocket();
+                clientTh = new Thread(clientRoutine);
+                clientTh.IsBackground = true;
+                clientTh.Start();
+            }
+        }
+
+        private void clientRoutine()
+        {
+            Socket sck = client;
+            Thread th = clientTh;
+            string socketname = "";
+            while (true)
+            {
+
+                try
+                {
+                    byte[] buffer = new byte[4096];
+                    string repeatedName = "64|server|repeated username";
+                    int inLength = sck.Receive(buffer);
+                    lock (receivelocker)
+                    {
+                        string msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+                        string[] c = msg.Split('|');
+                        string cmd = c[0];
+                        string who = c[1];
+                        string str = c[2];
+                        //MessageBox.Show("SERVER  Cmd:" + cmd + " Who:" + who + " Str:" + str);
+                        switch (cmd)
+                        {
+                            case "0":                                 // for user login
+                                if (HT.ContainsKey(who) || who == "" || who.Length > 20 || who == "You" || who == "you" || who == "server" || who == "Server")
+                                {
+                                    buffer = Encoding.UTF8.GetBytes(repeatedName);
+                                    Thread.Sleep(10);
+                                    lock (sendlocker)
+                                    {
+                                        //براي خود كاربر پيام خوش آمد ميفرسته
+                                        sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                                    }
+                                    break;
+
+                                }
+
+                                socketname = who;
+                                lock (listlocker)
+                                {
+                                    HT.Add(who, sck);
+                                    listBoxUser.Items.Add(who);
+                                }
+
+                                //براي همه پيام ميفرسته كه
+                                //(who)
+                                //آنلاين شده
+                                sendToAll("99" + "|server|" + who + " has logged in");
+
+                                //ليست افراد آنلاين رو براي همه ميفرسته
+                                sendToAll(cmd + "|server|" + getOnlineList());
+
+                                break;
+                            case "1":                                 // for broadcast
+
+                                sendToAll(cmd + "|" + who + "|" + str);
+                                break;
+
+                            case "2":                                 // for private message
+                                string to = c[3];
+                                //پيام خصوصي براي كاربر 
+                                //(who)
+                                //ميفرسته
+                                sendToClient(cmd + "|" + who + "|" + c[2], to);
+                                break;
+                        }
+                    }
+                }
+
+                catch (Exception)
+                {
+                    lock (receivelocker)
+                    {
+                        lock (listlocker)
+                        {
+                            HT.Remove(socketname);
+                            listBoxUser.Items.Remove(socketname);
+                        }
+                        Console.WriteLine(socketname + "has lost");
+                        Thread.Sleep(500);
+                        //براي همه پيام خروج كاربر
+                        //soketname
+                        //راميفرسته
+                        sendToAll("99" + "|server|" + socketname + " has lost connection");
+
+                        //ليست افراد آنلاين رو براي همه ميفرسته
+                        sendToAll(0 + "|server|" + getOnlineList());
+
+                        th.Abort();
+                    }
+                }
+
+
+
+            }
+        }
+
+        private string getOnlineList()
+        {
+
+            if (listBoxUser.Items.Count > 0)
+            {
+                string list = "";
+                for (int i = 0; i < listBoxUser.Items.Count - 1; ++i)
+                {
+                    list += listBoxUser.Items[i] + ",";
+                }
+                list += listBoxUser.Items[listBoxUser.Items.Count - 1];
+                return list;
+            }
+
+            return "";
+        }
+
+        private void sendToClient(string str, string user)
+        {
+
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+            lock (listlocker)
+            {
+                Socket sck = (Socket)HT[user];
+
+                try
+                {
+                    lock (sendlocker)
+                    {
+                        //براي خود كاربر پيام رو ثبت ميكنه در صفحه خودش
+                        sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                    }
+                }
+                catch (Exception)
+                {
+                    ;
+                }
+            }
+        }
+
+        private void sendToAll(string str)
+        {
+
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+            /*List<Socket> sks = HT.Values.Cast<Socket>().ToList();*/
+
+            lock (listlocker)
+            {
+
+                foreach (Socket s in HT.Values)
+                {
+                    try
+                    {
+                        lock (sendlocker)
+                        {
+                            s.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        ;
+                    }
+
+                }
+            }
+
+
+        }
+
+        #endregion
+
+
+
     }
 }

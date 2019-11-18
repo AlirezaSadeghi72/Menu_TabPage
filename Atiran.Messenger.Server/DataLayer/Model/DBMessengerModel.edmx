@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="DBMessengerModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Contacts">
+          <Key>
+            <PropertyRef Name="ContactsID" />
+          </Key>
+          <Property Name="ContactsID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserID" Type="int" Nullable="false" />
+          <Property Name="ContactUserID" Type="int" Nullable="false" />
+          <Property Name="ContactDelete" Type="bit" />
+          <Property Name="Order" Type="nvarchar" MaxLength="20" />
+        </EntityType>
+        <EntityType Name="Message_Temp">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="bigint" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="FromTocen" Type="int" Nullable="false" />
+          <Property Name="ToTocen" Type="int" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="bit" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="bit" Nullable="false" />
+          <Property Name="DateTimeSend" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="situation" Type="bit" />
+        </EntityType>
+        <EntityType Name="MessageNotRed">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MessageID" Type="bigint" Nullable="false" />
+          <Property Name="FromTocen" Type="int" Nullable="false" />
+          <Property Name="ToTocen" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Messages">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="bigint" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="FromTocen" Type="int" Nullable="false" />
+          <Property Name="ToTocen" Type="int" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="bit" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="bit" Nullable="false" />
+          <Property Name="DateTimeSend" Type="nvarchar" MaxLength="20" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Users">
+          <Key>
+            <PropertyRef Name="UserID" />
+          </Key>
+          <Property Name="UserID" Type="int" Nullable="false" />
+          <Property Name="UserName" Type="nvarchar" MaxLength="30" Nullable="false" />
+          <Property Name="Password" Type="nchar" MaxLength="30" />
+          <Property Name="NextMessageID" Type="bigint" />
+          <Property Name="LastSeenReserve" Type="nvarchar" MaxLength="20" />
+          <Property Name="situation" Type="bit" Nullable="false" />
+          <Property Name="avtive" Type="bit" />
+        </EntityType>
+        <EntityContainer Name="DBMessengerModelStoreContainer">
+          <EntitySet Name="Contacts" EntityType="Self.Contacts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Message_Temp" EntityType="Self.Message_Temp" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MessageNotRed" EntityType="Self.MessageNotRed" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Messages" EntityType="Self.Messages" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="DBMessengerModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Contacts">
+          <Key>
+            <PropertyRef Name="ContactsID" />
+          </Key>
+          <Property Name="ContactsID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserID" Type="Int32" Nullable="false" />
+          <Property Name="ContactUserID" Type="Int32" Nullable="false" />
+          <Property Name="ContactDelete" Type="Boolean" />
+          <Property Name="Order" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="Message_Temp">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="Int64" Nullable="false" />
+          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FromTocen" Type="Int32" Nullable="false" />
+          <Property Name="ToTocen" Type="Int32" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
+          <Property Name="DateTimeSend" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="situation" Type="Boolean" />
+        </EntityType>
+        <EntityType Name="MessageNotRed">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MessageID" Type="Int64" Nullable="false" />
+          <Property Name="FromTocen" Type="Int32" Nullable="false" />
+          <Property Name="ToTocen" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Messages">
+          <Key>
+            <PropertyRef Name="FromTocen" />
+            <PropertyRef Name="ToTocen" />
+            <PropertyRef Name="DateTimeSend" />
+          </Key>
+          <Property Name="MessageID" Type="Int64" Nullable="false" />
+          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FromTocen" Type="Int32" Nullable="false" />
+          <Property Name="ToTocen" Type="Int32" Nullable="false" />
+          <Property Name="MessageDeleteFrom" Type="Boolean" Nullable="false" />
+          <Property Name="MessageDeleteTo" Type="Boolean" Nullable="false" />
+          <Property Name="DateTimeSend" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Users">
+          <Key>
+            <PropertyRef Name="UserID" />
+          </Key>
+          <Property Name="UserID" Type="Int32" Nullable="false" />
+          <Property Name="UserName" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Password" Type="String" MaxLength="30" FixedLength="true" Unicode="true" />
+          <Property Name="NextMessageID" Type="Int64" />
+          <Property Name="LastSeenReserve" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="situation" Type="Boolean" Nullable="false" />
+          <Property Name="avtive" Type="Boolean" />
+        </EntityType>
+        <EntityContainer Name="DBMessengerEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Contacts" EntityType="Self.Contacts" />
+          <EntitySet Name="Message_Temp" EntityType="Self.Message_Temp" />
+          <EntitySet Name="MessageNotRed" EntityType="Self.MessageNotRed" />
+          <EntitySet Name="Messages" EntityType="Self.Messages" />
+          <EntitySet Name="Users" EntityType="Self.Users" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="DBMessengerModelStoreContainer" CdmEntityContainer="DBMessengerEntities">
+          <EntitySetMapping Name="Contacts">
+            <EntityTypeMapping TypeName="DBMessengerModel.Contacts">
+              <MappingFragment StoreEntitySet="Contacts">
+                <ScalarProperty Name="ContactsID" ColumnName="ContactsID" />
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="ContactUserID" ColumnName="ContactUserID" />
+                <ScalarProperty Name="ContactDelete" ColumnName="ContactDelete" />
+                <ScalarProperty Name="Order" ColumnName="Order" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Message_Temp">
+            <EntityTypeMapping TypeName="DBMessengerModel.Message_Temp">
+              <MappingFragment StoreEntitySet="Message_Temp">
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
+                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
+                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
+                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
+                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
+                <ScalarProperty Name="situation" ColumnName="situation" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MessageNotRed">
+            <EntityTypeMapping TypeName="DBMessengerModel.MessageNotRed">
+              <MappingFragment StoreEntitySet="MessageNotRed">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
+                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Messages">
+            <EntityTypeMapping TypeName="DBMessengerModel.Messages">
+              <MappingFragment StoreEntitySet="Messages">
+                <ScalarProperty Name="MessageID" ColumnName="MessageID" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="FromTocen" ColumnName="FromTocen" />
+                <ScalarProperty Name="ToTocen" ColumnName="ToTocen" />
+                <ScalarProperty Name="MessageDeleteFrom" ColumnName="MessageDeleteFrom" />
+                <ScalarProperty Name="MessageDeleteTo" ColumnName="MessageDeleteTo" />
+                <ScalarProperty Name="DateTimeSend" ColumnName="DateTimeSend" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Users">
+            <EntityTypeMapping TypeName="DBMessengerModel.Users">
+              <MappingFragment StoreEntitySet="Users">
+                <ScalarProperty Name="UserID" ColumnName="UserID" />
+                <ScalarProperty Name="UserName" ColumnName="UserName" />
+                <ScalarProperty Name="Password" ColumnName="Password" />
+                <ScalarProperty Name="NextMessageID" ColumnName="NextMessageID" />
+                <ScalarProperty Name="LastSeenReserve" ColumnName="LastSeenReserve" />
+                <ScalarProperty Name="situation" ColumnName="situation" />
+                <ScalarProperty Name="avtive" ColumnName="avtive" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
