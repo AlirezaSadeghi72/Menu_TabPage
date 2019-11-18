@@ -392,7 +392,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             var dt = DateTime.Now;
             var Message = new Message_Temp()
             {
-                Text = txtMessage.Text,
+                Text = txtMessage.Text.Trim(),
                 FromTocen = _userIdFrom,
                 ToTocen = _userIdTo,
                 DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") + "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
@@ -416,6 +416,11 @@ namespace Atiran.Messenger.Forms.ChatTabs
                 _historyMessagese.Add(MessageSend);
                 dataGridView1.DataSource = _historyMessagese.ToList();
                 SetGrid();
+            }
+            else
+            {
+                MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 

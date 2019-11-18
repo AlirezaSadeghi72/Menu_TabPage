@@ -13,8 +13,9 @@ namespace Atiran.DataLayer.Services.Messenger
         public Bitmap Image { get; set; }
         public string UserName { get; set; }
         public bool situation { get; set; }
-
         public int MessageNotRed { get; set; }
+        public string Orders { get; set; }
+
 
     }
 }

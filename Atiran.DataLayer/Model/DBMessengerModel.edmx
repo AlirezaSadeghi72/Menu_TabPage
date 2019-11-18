@@ -13,6 +13,7 @@
           <Property Name="UserID" Type="int" Nullable="false" />
           <Property Name="ContactUserID" Type="int" Nullable="false" />
           <Property Name="ContactDelete" Type="bit" />
+          <Property Name="Order" Type="nvarchar" MaxLength="20" />
         </EntityType>
         <EntityType Name="Message_Temp">
           <Key>
@@ -83,6 +84,7 @@
           <Property Name="UserID" Type="Int32" Nullable="false" />
           <Property Name="ContactUserID" Type="Int32" Nullable="false" />
           <Property Name="ContactDelete" Type="Boolean" />
+          <Property Name="Order" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="MessageNotRed">
           <Key>
@@ -150,6 +152,7 @@
           <EntitySetMapping Name="Contacts">
             <EntityTypeMapping TypeName="DBMessengerModel.Contacts">
               <MappingFragment StoreEntitySet="Contacts">
+                <ScalarProperty Name="Order" ColumnName="Order" />
                 <ScalarProperty Name="ContactsID" ColumnName="ContactsID" />
                 <ScalarProperty Name="UserID" ColumnName="UserID" />
                 <ScalarProperty Name="ContactUserID" ColumnName="ContactUserID" />

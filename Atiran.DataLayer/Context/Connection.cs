@@ -727,24 +727,26 @@ namespace Atiran.DataLayer.Context
             }
         }
 
-        public static List<contacts> GetHistoryContactse(string UserName)
+        public static List<contacts> GetHistoryContacts(string UserName)
         {
             using (var ctx = new DBMessengerEntities())
             {
-                var User = _allUser?.FirstOrDefault(w => w.UserName == UserName);
+                var User = AllUser?.FirstOrDefault(w => w.UserName == UserName);
                 if (User != null)
                 {
+
                     var listUserHistory = ctx.Contacts.AsNoTracking().Where(w => (w.UserID == User.UserID && w.ContactDelete != true)).ToList();
 
                     var MessageNotRed = ctx.MessageNotRed.AsNoTracking().Where(w => (w.ToTocen == User.UserID)).ToList();
 
                     return listUserHistory.Select(s => new contacts()
                     {
-                        ID = s.UserID,
-                        UserName = _allUser.FirstOrDefault(w => w.UserID == s.UserID).UserName,
-                        situation = _allUser.FirstOrDefault(w => w.UserID == s.UserID).situation,
-                        MessageNotRed = MessageNotRed.Count(c => c.FromTocen == s.ContactUserID)
-                    }).ToList();
+                        ID = s.ContactUserID,
+                        UserName = _allUser.FirstOrDefault(w => w.UserID == s.ContactUserID).UserName,
+                        situation = _allUser.FirstOrDefault(w => w.UserID == s.ContactUserID).situation,
+                        MessageNotRed = MessageNotRed.Count(c => c.FromTocen == s.ContactUserID),
+                        Orders = s.Order
+                    }).OrderByDescending(o=>o.Orders).ToList();
                 }
             }
 
@@ -798,7 +800,7 @@ namespace Atiran.DataLayer.Context
                 using (var ctx = new DBMessengerEntities())
                 {
                     //var FirsIdMessageNotRed = ctx.MessageNotRed.AsNoTracking().FirstOrDefault(w => w.ToTocen == UserID).MessageID;
-                    return ctx.Messages.AsNoTracking().Where(w => (w.FromTocen == UserIDFrom && w.ToTocen == UserIDTo )||(w.FromTocen ==UserIDTo && w.ToTocen == UserIDFrom))
+                    return ctx.Messages.AsNoTracking().Where(w => (w.FromTocen == UserIDFrom && w.ToTocen == UserIDTo )||(w.FromTocen ==UserIDTo && w.ToTocen == UserIDFrom)).OrderBy(o=>o.DateTimeSend)
                         .ToList();
                 }
             }

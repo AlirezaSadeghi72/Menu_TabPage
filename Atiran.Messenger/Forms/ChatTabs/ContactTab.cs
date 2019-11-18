@@ -31,7 +31,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             InitializeComponent();
             _userName = UserName;
             _dockPanel = dockPanel;
-            _historyUser = Connection.GetHistoryContactse(_userName);
+            _historyUser = Connection.GetHistoryContacts(_userName);
         }
         private void InitializeComponent()
         {
@@ -115,7 +115,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             { timer1.Stop(); }
             else
             {
-                _historyUser = Connection.GetHistoryContactse(_userName);
+                _historyUser = Connection.GetHistoryContacts(_userName);
                 dataGridView1.DataSource = _historyUser;
                 SetGrid();
             }
@@ -153,14 +153,14 @@ namespace Atiran.Messenger.Forms.ChatTabs
             dataGridView1.Columns["UserName"].HeaderText = "نام كاربر";
 
             dataGridView1.Columns["MessageNotRed"].Visible = true;
-            dataGridView1.Columns["MessageNotRed"].Width = 20;
+            dataGridView1.Columns["MessageNotRed"].Width = 40;
             dataGridView1.Columns["MessageNotRed"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dataGridView1.Columns["MessageNotRed"].HeaderText = "تعدا پيام هاي خوانده نشده";
 
-            dataGridView1.Columns["situation"].Visible = true;
-            dataGridView1.Columns["situation"].Width = 10;
-            dataGridView1.Columns["situation"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridView1.Columns["situation"].HeaderText = "وضعيت انلايني كاربر";
+            //dataGridView1.Columns["situation"].Visible = true;
+            //dataGridView1.Columns["situation"].Width = 10;
+            //dataGridView1.Columns["situation"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            //dataGridView1.Columns["situation"].HeaderText = "وضعيت انلايني كاربر";
         }
 
         private void OpenTab(string UserName)

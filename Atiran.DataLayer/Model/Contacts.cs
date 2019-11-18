@@ -18,5 +18,6 @@ namespace Atiran.DataLayer.Model
         public int UserID { get; set; }
         public int ContactUserID { get; set; }
         public Nullable<bool> ContactDelete { get; set; }
+        public string Order { get; set; }
     }
 }
