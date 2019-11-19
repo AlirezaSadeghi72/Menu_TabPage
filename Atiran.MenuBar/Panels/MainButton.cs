@@ -3,22 +3,45 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
 using Atiran.DataLayer.Services;
 using Atiran.MenuBar.Class;
 using Atiran.MenuBar.Forms;
 using Atiran.MenuBar.Properties;
+using Atiran.Messenger.Class;
 using Atiran.Messenger.Forms;
 using Atiran.Utility.Docking2;
 using Atiran.Utility.Docking2.Desk;
 using Atiran.Utility.MassageBox;
+using Timer = System.Windows.Forms.Timer;
 
 namespace Atiran.MenuBar.Panels
 {
     public class MainButton : UserControl
     {
+        #region Private Messenger
+
+        private Thread th;
+        private int loginState = 0;
+
+        private int NumberMessageNotRed = 0;
+
+        #endregion
+
+        public MainButton()
+        {
+            InitializeComponent();
+            this.BackColor = Color.Transparent;
+            timer1.Start();
+
+        }
+
         private Label lblMaximis;
         private Label lblMinimis;
         private Timer timer1;
@@ -47,44 +70,6 @@ namespace Atiran.MenuBar.Panels
         private Label label4;
         private List<Form> deskTabs;
 
-        public MainButton()
-        {
-            InitializeComponent();
-            this.BackColor = Color.Transparent;
-            timer1.Start();
-
-        }
-        private void MainButton_Load(object sender, EventArgs e)
-        {
-            if (!this.DesignMode)
-            {
-                mainPane = (DockPanel)((Form)(this.TopLevelControl)).Controls.Find("MainTab", true).FirstOrDefault();
-                sh1 = new ShortcutDesk(ref mainPane, 1);
-                lblMaximis.Image = (((Form)this.TopLevelControl).WindowState == FormWindowState.Normal)
-                    ? Resources.Maximis_1
-                    : Resources.Maximis_2;
-                List<ActiveUser> users = Connection.GetActiveUsers();
-
-                miUserActivs.DropDownItems.Clear();
-                List<ToolStripMenuItem> list = new List<ToolStripMenuItem>();
-                foreach (var u in users)
-                    list.Add(new ToolStripMenuItem()
-                    {
-                        Text = u.user_name,
-                        RightToLeft = RightToLeft.Yes,
-                        ForeColor = SystemColors.ButtonFace,
-                        BackColor = Color.FromArgb(40, 130, 150),
-                        Font = new Font("IRANSans(FaNum)", 11),
-                    });
-
-                miUserActivs.DropDownItems.AddRange(toolStripItems: list.ToArray());
-
-                miUserActivs.Text = users.FirstOrDefault(u => u.user_id == UserID)?.user_name;
-                lblSalMali.Text = Connection.GetNameSalMali(SalMaliID);
-
-            }
-            msUserActivs.Renderer = new ToolStripProfessionalRendererAtiran();
-        }
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
@@ -384,6 +369,45 @@ namespace Atiran.MenuBar.Panels
 
         }
 
+        private void MainButton_Load(object sender, EventArgs e)
+        {
+            if (!this.DesignMode)
+            {
+                mainPane = (DockPanel)((Form)(this.TopLevelControl)).Controls.Find("MainTab", true).FirstOrDefault();
+                sh1 = new ShortcutDesk(ref mainPane, 1);
+                lblMaximis.Image = (((Form)this.TopLevelControl).WindowState == FormWindowState.Normal)
+                    ? Resources.Maximis_1
+                    : Resources.Maximis_2;
+                List<ActiveUser> users = Connection.GetActiveUsers();
+
+                miUserActivs.DropDownItems.Clear();
+                List<ToolStripMenuItem> list = new List<ToolStripMenuItem>();
+                foreach (var u in users)
+                    list.Add(new ToolStripMenuItem()
+                    {
+                        Text = u.user_name,
+                        RightToLeft = RightToLeft.Yes,
+                        ForeColor = SystemColors.ButtonFace,
+                        BackColor = Color.FromArgb(40, 130, 150),
+                        Font = new Font("IRANSans(FaNum)", 11),
+                    });
+
+                miUserActivs.DropDownItems.AddRange(toolStripItems: list.ToArray());
+
+                miUserActivs.Text = users.FirstOrDefault(u => u.user_id == UserID)?.user_name;
+                lblSalMali.Text = Connection.GetNameSalMali(SalMaliID);
+
+                //messenger
+                ServiceServer.serverIP = "36.234.159.37";
+                ServiceServer.serverPort = "1372";
+                setLabelMessageNotRed(Connection.GetNumberMessageNotRed(UserID));
+                LoginMessenger();
+                //-------
+
+            }
+            msUserActivs.Renderer = new ToolStripProfessionalRendererAtiran();
+        }
+
         private void lblClose_MouseDown(object sender, MouseEventArgs e)
         {
             ((Control)sender).BackColor = Color.DarkRed;
@@ -513,6 +537,26 @@ namespace Atiran.MenuBar.Panels
             lblDateTime.Text = String.Format("{0}/{1}/{2}   {3}:{4}:{5}", pc.GetYear(td).ToString("0000"), pc.GetMonth(td).ToString("00"), pc.GetDayOfMonth(td).ToString("00"), td.Hour.ToString("00"), td.Minute.ToString("00"), td.Second.ToString("00"));
         }
 
+        private void btnMessenger_Click(object sender, EventArgs e)
+        {
+            if (loginState == 0)
+            {
+                MessageBox.Show("خطا", "اتصال برقرار نشده لطفا مجدد تلاش كنيد", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ServiceServer.T.Close();
+                th.Abort();
+                LoginMessenger();
+            }
+            else
+            {
+                th.Abort();
+
+                MainMessanger messanger = new MainMessanger(miUserActivs.Text);
+                messanger.ShowDialog();
+
+                th.Start();
+            }
+        }
+
         #region moving form by muse in header
 
         [DllImport("user32.dll")]
@@ -520,7 +564,7 @@ namespace Atiran.MenuBar.Panels
             int Msg, int wParam, int lParam);
         [DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
-        
+
         private void MainButton_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -529,10 +573,96 @@ namespace Atiran.MenuBar.Panels
                 SendMessage(((Form)TopLevelControl).Handle, 0x00A1, 0x2, 0);
             }
         }
-        private void btnMessenger_Click(object sender, EventArgs e)
+
+        #endregion
+
+        #region Method Messenger
+
+        private void setLabelMessageNotRed(int Number)
         {
-            MainMessanger messanger = new MainMessanger(miUserActivs.Text);
-            messanger.ShowDialog();
+            NumberMessageNotRed = Number;
+            if (NumberMessageNotRed > 0)
+            {
+                //نمايش روي پيام ها
+            }
+        }
+
+        private void LoginMessenger()
+        {
+            CheckForIllegalCrossThreadCalls = false;
+            try
+            {
+                IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIP), int.Parse(ServiceServer.serverPort));
+                ServiceServer.T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                ServiceServer.T.Connect(EP);
+                th = new Thread(listenRoutine);
+                th.IsBackground = true;
+                th.Priority = ThreadPriority.Normal;
+                th.Start();
+                sendMessage("0|" + miUserActivs.Text + "|login");
+                loginState = 1;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("ارتباط با سرور ممکن نیست!");
+            }
+        }
+
+        private void listenRoutine()
+        {
+            EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
+            byte[] buffer = new byte[4096];
+            int inLength = 0;
+            string msg;
+            string cmd;
+            while (true)
+            {
+                try
+                {
+                    inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP);
+                }
+
+                catch (Exception)
+                {
+                    ServiceServer.T.Close();
+                    //listBoxUserList.Items.Clear();
+                    //richTextBoxBoard.AppendText(time + " اتصال از بین رفته است");
+                    loginState = 0;
+                    //labelStatus.Text = " بدون اتصال ";
+                    th.Abort();
+                }
+
+                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                string[] c = msg.Split('|');
+                cmd = c[0];
+                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                if (cmd == "2")
+                {
+                    //تعداد پيام هاي خانده نشده را اپديت كنه
+                    setLabelMessageNotRed(NumberMessageNotRed + 1);
+                }
+                else if (cmd == "64")
+                {
+                    loginState = 0;
+                    MessageBox.Show("نام کاربری نامعتبر است ، لطفا دوباره وارد شوید!");
+                    th.Abort();
+                }
+            }
+
+        }
+
+        private void sendMessage(string str)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+            ServiceServer.T.Send(buffer, 0, buffer.Length, SocketFlags.None);
+        }
+
+        public void QuitMessenger()
+        {
+            sendMessage("9|" + miUserActivs.Text + "|quit");
+            ServiceServer.T.Close();
+            th.Abort();
         }
 
         #endregion
