@@ -44,6 +44,18 @@ namespace Atiran.Messenger.Server.DataLayer.Context
             }
         }
 
+        public static void RedMessage(int UserIdTo, int UserIdFrom)
+        {
+            using (var ctx = new DBMessengerEntities())
+            {
+                var result = ctx.MessageNotRed.AsNoTracking()
+                    .Where(w => w.FromTocen == UserIdFrom && w.ToTocen == UserIdTo).ToList();
+                result.Clear();
+                ctx.SaveChanges();
+
+            }
+        }
+
 
     }
 }
