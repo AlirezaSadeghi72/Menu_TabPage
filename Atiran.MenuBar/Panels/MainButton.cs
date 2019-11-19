@@ -398,7 +398,7 @@ namespace Atiran.MenuBar.Panels
                 lblSalMali.Text = Connection.GetNameSalMali(SalMaliID);
 
                 //messenger
-                ServiceServer.serverIP = "36.234.159.37";
+                ServiceServer.serverIP = "127.0.0.1";
                 ServiceServer.serverPort = "1372";
                 setLabelMessageNotRed(Connection.GetNumberMessageNotRed(UserID));
                 LoginMessenger();
@@ -542,8 +542,6 @@ namespace Atiran.MenuBar.Panels
             if (loginState == 0)
             {
                 MessageBox.Show("خطا", "اتصال برقرار نشده لطفا مجدد تلاش كنيد", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                ServiceServer.T.Close();
-                th.Abort();
                 LoginMessenger();
             }
             else
@@ -660,9 +658,15 @@ namespace Atiran.MenuBar.Panels
 
         public void QuitMessenger()
         {
-            sendMessage("9|" + miUserActivs.Text + "|quit");
-            ServiceServer.T.Close();
-            th.Abort();
+            try
+            {
+                sendMessage("9|" + miUserActivs.Text + "|quit");
+                ServiceServer.T.Close();
+                th.Abort();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         #endregion

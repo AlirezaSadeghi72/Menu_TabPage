@@ -133,7 +133,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private void Contact_Enter(object sender, EventArgs e)
         {
             // فعال كردن دريافت  پيام از سرور براي اين فرم
-            th.Start();
+           // th.Start();
             //timer1.Start();
         }
 

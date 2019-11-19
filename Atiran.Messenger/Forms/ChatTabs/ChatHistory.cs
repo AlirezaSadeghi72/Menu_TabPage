@@ -447,7 +447,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
             //        MessageBoxIcon.Error);
             //}
-            sendMessage("2|" + _userIdFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+            sendMessage("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
 
         }
 
