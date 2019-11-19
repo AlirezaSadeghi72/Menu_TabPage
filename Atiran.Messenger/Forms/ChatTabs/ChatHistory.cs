@@ -136,7 +136,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             // 
             // txtSearch
             // 
-            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSearch.Location = new System.Drawing.Point(109, 3);
             this.txtSearch.Multiline = true;
@@ -305,7 +305,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
                 //مارك كردن پيام هاي خوانده نشده اين كاربر 
                 //model : 7|to|red|From
-                sendMessage("7|" + _userIdFrom + "|red|"+_userIdTo);
+                sendMessage("7|" + _userIdFrom + "|red|" + _userIdTo);
             }
             //--------
         }
@@ -447,8 +447,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
             //        MessageBoxIcon.Error);
             //}
-            sendMessage("2|" + _userIdFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
-            
+            sendMessage("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+
         }
 
         private void listenRoutine()
@@ -484,35 +484,68 @@ namespace Atiran.Messenger.Forms.ChatTabs
                 {
                     case "0":
                     case "99":
-                        string[] M = str.Split(',');
-                        if (M.Any(a => a == _userNameFrom))
                         {
-                            lblSituation.Text = "انلاين";
-                            lblSituation.BackColor = Color.FromArgb(128, 255, 128);
-                        }
-                        else
-                        {
-                            lblSituation.Text = "افلاين";
-                            lblSituation.BackColor = Color.FromArgb(255, 192, 128);
-                        }
+                            string[] M = str.Split(',');
+                            if (M.Any(a => a == _userNameFrom))
+                            {
+                                lblSituation.Text = "انلاين";
+                                lblSituation.BackColor = Color.FromArgb(128, 255, 128);
+                            }
+                            else
+                            {
+                                lblSituation.Text = "افلاين";
+                                lblSituation.BackColor = Color.FromArgb(255, 192, 128);
+                            }
 
-                        break;
+                            break;
+                        }
 
                     case "2":
-                        if (who == _userNameFrom)
                         {
+                            int fromId = Connection.AllUser.FirstOrDefault(f => f.UserName == who).UserID;
+                            int toId = Connection.AllUser.FirstOrDefault(f => f.UserName == c[3]).UserID;
+                            string dateTime = c[4];
+                            string MessageId = c[5];
+                            if (fromId == _userIdFrom && toId == _userIdTo)
+                            {
+                                var MessageSend = new Messages()
+                                {
+                                    Text = str,
+                                    FromTocen = fromId,
+                                    ToTocen = toId,
+                                    MessageDeleteTo = false,
+                                    MessageDeleteFrom = false,
+                                    DateTimeSend = dateTime,
+                                    MessageID = Convert.ToInt32(MessageId)
+                                };
+                                _historyMessagese.Add(MessageSend);
+                                dataGridView1.DataSource = _historyMessagese.ToList();
+                                SetGrid();
+                                flashWindow();
 
-                        }
-                        else if (who == _userNameTo)
-                        {
+                            }
+                            else if (toId == _userIdFrom && fromId == _userIdTo)
+                            {
+                                var MessageSend = new Messages()
+                                {
+                                    Text = str,
+                                    FromTocen = toId,
+                                    ToTocen = fromId,
+                                    MessageDeleteTo = false,
+                                    MessageDeleteFrom = false,
+                                    DateTimeSend = dateTime,
+                                    MessageID = Convert.ToInt32(MessageId)
+                                };
+                                _historyMessagese.Add(MessageSend);
+                                dataGridView1.DataSource = _historyMessagese.ToList();
+                                SetGrid();
+                                flashWindow();
 
+                            }
+
+                            break;
                         }
-                        flashWindow();
-                        //richTextBoxBoard.AppendText(time + "[پیام خصوصی]" + who + ": " + str + "\r\n");
-                        //richTextBoxBoard.SelectionStart = richTextBoxBoard.Text.Length;
-                        //flashWindow();
-                        break;
-                    
+
                 }
             }
         }
@@ -528,7 +561,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         [DllImport("user32.dll")]
         private static extern bool FlashWindowEx(ref FLASHWINFO fi);
-        
+
         private struct FLASHWINFO
         {
             public uint cbSize;
