@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atiran.Reporting", "Atiran.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atiran.Messenger", "Atiran.Messenger\Atiran.Messenger.csproj", "{42D94242-56C4-4B19-BEBD-F5DF696A9964}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atiran.Messenger.Server", "Atiran.Messenger.Server\Atiran.Messenger.Server.csproj", "{BA13E3FA-1F4E-4154-ACB2-EEEF963420F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{42D94242-56C4-4B19-BEBD-F5DF696A9964}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42D94242-56C4-4B19-BEBD-F5DF696A9964}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42D94242-56C4-4B19-BEBD-F5DF696A9964}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA13E3FA-1F4E-4154-ACB2-EEEF963420F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA13E3FA-1F4E-4154-ACB2-EEEF963420F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA13E3FA-1F4E-4154-ACB2-EEEF963420F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA13E3FA-1F4E-4154-ACB2-EEEF963420F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

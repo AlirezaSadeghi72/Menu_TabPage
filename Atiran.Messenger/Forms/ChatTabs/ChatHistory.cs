@@ -398,7 +398,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                 DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") + "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
                 MessageDeleteFrom = false,
                 MessageDeleteTo = false,
-                MessageID = Connection.AllUser.First(f => f.UserID == _userIdFrom).NextMessageID ?? 1,
+                MessageID = Connection.AllUser.First(f => f.UserID == _userIdFrom).NextMessageID ?? 1
             };
             if (Connection.SendMessage(Message))
             {
