@@ -320,9 +320,8 @@ namespace Atiran.Messenger.Server
                                 }
                             case "7":
                                 {
-                                    string to = c[3];
-                                    int fromID = connection.AllUsers.FirstOrDefault(w => w.UserName == who).UserID;
-                                    int ToID = connection.AllUsers.FirstOrDefault(w => w.UserName == to).UserID;
+                                    int fromID = Convert.ToInt32(who);
+                                    int ToID = Convert.ToInt32(c[3]);
 
                                     connection.RedMessage(fromID, ToID);
                                     sendToAll("0" + "|server|" + getOnlineList());
