@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataLayer\Context\connection.cs" />
     <Compile Include="DataLayer\Model\Contacts.cs">
       <DependentUpon>DBMessengerModel.tt</DependentUpon>
     </Compile>
@@ -123,7 +124,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DataLayer\Context\" />
     <Folder Include="DataLayer\Services\" />
   </ItemGroup>
   <ItemGroup>

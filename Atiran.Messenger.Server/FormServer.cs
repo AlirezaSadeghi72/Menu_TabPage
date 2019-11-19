@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -8,6 +9,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Atiran.Messenger.Server.DataLayer.Context;
+using Atiran.Messenger.Server.DataLayer.Model;
 
 namespace Atiran.Messenger.Server
 {
@@ -16,13 +19,15 @@ namespace Atiran.Messenger.Server
         private object listlocker = new Object();
         private object sendlocker = new Object();
         private object receivelocker = new Object();
+        private object sqlLocker = new Object();
         TcpListener server;
         Socket client;
         Thread serverTh;
         Thread clientTh;
         Hashtable HT = new Hashtable();
         string serverIP = IPAddress.Any.ToString();
-        string serverPort = "9090";
+        string serverPort = "1372";
+        private PersianCalendar _pc = new PersianCalendar();
 
         public FormServer()
         {
@@ -74,7 +79,7 @@ namespace Atiran.Messenger.Server
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(76, 20);
             this.textBox1.TabIndex = 3;
-            this.textBox1.Text = "9090";
+            this.textBox1.Text = "1372";
             // 
             // labelPort
             // 
@@ -143,8 +148,8 @@ namespace Atiran.Messenger.Server
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Calibri", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -244,6 +249,9 @@ namespace Atiran.Messenger.Server
                         string cmd = c[0];
                         string who = c[1];
                         string str = c[2];
+                        DateTime dt = DateTime.Now;
+                        string dateTime = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") +
+                                          "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.ToString("hh:mm:ss");
                         //MessageBox.Show("SERVER  Cmd:" + cmd + " Who:" + who + " Str:" + str);
                         switch (cmd)
                         {
@@ -255,7 +263,9 @@ namespace Atiran.Messenger.Server
                                     lock (sendlocker)
                                     {
                                         //براي خود كاربر پيام خوش آمد ميفرسته
+                                        connection.loginUser(who, true);
                                         sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                                        connection.RefreshUsers();
                                     }
                                     break;
 
@@ -271,7 +281,7 @@ namespace Atiran.Messenger.Server
                                 //براي همه پيام ميفرسته كه
                                 //(who)
                                 //آنلاين شده
-                                sendToAll("99" + "|server|" + who + " has logged in");
+                                //sendToAll("99" + "|server|" + who + " has logged in");
 
                                 //ليست افراد آنلاين رو براي همه ميفرسته
                                 sendToAll(cmd + "|server|" + getOnlineList());
@@ -284,8 +294,22 @@ namespace Atiran.Messenger.Server
 
                             case "2":                                 // for private message
                                 string to = c[3];
+
+                                //ثبت در ديتابيس
+                                var Message = new Message_Temp()
+                                {
+                                    Text = c[2].Trim(),
+                                    FromTocen = connection.AllUsers.FirstOrDefault(f => f.UserName == who).UserID,
+                                    ToTocen = connection.AllUsers.FirstOrDefault(f => f.UserName == to).UserID,
+                                    DateTimeSend = dateTime,
+                                    MessageDeleteFrom = false,
+                                    MessageDeleteTo = false,
+                                    MessageID = connection.AllUsers.First(f => f.UserName == who).NextMessageID ?? 1
+                                };
+                                connection.SendMessage(Message);
+
                                 //پيام خصوصي براي كاربر 
-                                //(who)
+                                //(to)
                                 //ميفرسته
                                 sendToClient(cmd + "|" + who + "|" + c[2], to);
                                 break;
@@ -301,6 +325,8 @@ namespace Atiran.Messenger.Server
                         {
                             HT.Remove(socketname);
                             listBoxUser.Items.Remove(socketname);
+
+                            connection.loginUser(socketname, false);
                         }
                         Console.WriteLine(socketname + "has lost");
                         Thread.Sleep(500);
@@ -350,7 +376,9 @@ namespace Atiran.Messenger.Server
                 {
                     lock (sendlocker)
                     {
-                        //براي خود كاربر پيام رو ثبت ميكنه در صفحه خودش
+                        //براي
+                        //user
+                        //پيام خصوصي ارسال ميكند
                         sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
                     }
                 }
