@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
 using Atiran.DataLayer.Model;
@@ -19,23 +23,6 @@ namespace Atiran.MenuBar.Forms
 {
     public class TabBarMenu : System.Windows.Forms.Form
     {
-        private Panel pnlMainButtons;
-        List<Menu> menus = new List<Menu>();
-        private Panel pnlFooter;
-        private MainButton mainButton1;
-        private ShortcutDesk sh1;
-        private VS2017LightTheme vS2017LightTheme1;
-        private List<SubSystem> subSystems = new List<SubSystem>();
-        private DockPanel MainTab;
-        private MenuStrip MyMnSt;
-        private int _userID = 1;
-        private Utility.Docking2.Theme.ThemeVS2012.VS2012LightTheme vS2012LightTheme1;
-        private int _salMaliID = 1;
-        private bool isCLoseAll = false;
-        private bool isCanselCLoseAll = false;
-        private List<System.Windows.Forms.Form> deskTabs;
-
-
         public TabBarMenu()
         {
             InitializeComponent();
@@ -75,6 +62,22 @@ namespace Atiran.MenuBar.Forms
 
 
         }
+
+        private Panel pnlMainButtons;
+        List<Menu> menus = new List<Menu>();
+        private Panel pnlFooter;
+        private MainButton mainButton1;
+        private ShortcutDesk sh1;
+        private VS2017LightTheme vS2017LightTheme1;
+        private List<SubSystem> subSystems = new List<SubSystem>();
+        private DockPanel MainTab;
+        private MenuStrip MyMnSt;
+        private int _userID = 1;
+        private Utility.Docking2.Theme.ThemeVS2012.VS2012LightTheme vS2012LightTheme1;
+        private int _salMaliID = 1;
+        private bool isCLoseAll = false;
+        private bool isCanselCLoseAll = false;
+        private List<System.Windows.Forms.Form> deskTabs;
 
         private void InitializeComponent()
         {
@@ -170,7 +173,7 @@ namespace Atiran.MenuBar.Forms
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TabBarMenu_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.TabBarMenu_FormClosed);
-            this.Load += new System.EventHandler(this.MyMenuItem_Load);
+            this.Load += new System.EventHandler(this.TabBarMenu_Load);
             this.pnlMainButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.MainTab)).EndInit();
             this.ResumeLayout(false);
@@ -178,6 +181,7 @@ namespace Atiran.MenuBar.Forms
         }
 
         #region Event
+
         private void Form_Click(object sender, EventArgs e)
         {
             //MessageBox.Show("The Form whit Id " +
@@ -252,7 +256,7 @@ namespace Atiran.MenuBar.Forms
             ((ToolStripMenuItem)sender).Image = Properties.Resources.expandleft;
         }
 
-        private void MyMenuItem_Load(object sender, EventArgs e)
+        private void TabBarMenu_Load(object sender, EventArgs e)
         {
             MyMnSt.Renderer = new ToolStripProfessionalRendererAtiran();
             MyMnSt.BackColor = Color.FromArgb(20, 130, 150);
@@ -317,6 +321,9 @@ namespace Atiran.MenuBar.Forms
 
         private void TabBarMenu_FormClosed(object sender, FormClosedEventArgs e)
         {
+            //Quit Messenger
+            mainButton1.QuitMessenger();
+
             Application.Exit();
         }
 
@@ -345,11 +352,9 @@ namespace Atiran.MenuBar.Forms
             }
         }
 
-        
         #endregion
 
         #region Method
-
 
         private void FirstTurn()
         {
@@ -383,7 +388,7 @@ namespace Atiran.MenuBar.Forms
                         tmp.TextImageRelation = TextImageRelation.ImageBeforeText;
                         //tmp.RightToLeftAutoMirrorImage = true;
                         tmp.Height = MyMnSt.Height;
-                        tmp.CheckedChanged+=
+                        tmp.CheckedChanged +=
                             ItemMenuStrip_MouseHover;
                     }
 

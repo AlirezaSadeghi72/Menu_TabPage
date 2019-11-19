@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
 using Atiran.DataLayer.Model;
+using Atiran.Messenger.Class;
 using Atiran.Messenger.Forms.ChatTabs;
 using Atiran.Utility.Docking2;
 using Form = System.Windows.Forms.Form;
@@ -24,6 +26,8 @@ namespace Atiran.Messenger.Forms
         private ToolStripComboBox toolStripComboBox2;
         private List<Users> AllUsers;
         //private DeskTab _deskTab;
+
+
 
         public MainMessanger(string UserName)
         {
@@ -132,6 +136,7 @@ namespace Atiran.Messenger.Forms
         {
             _contactTab.Text = "ليست مخاطبين";
             _contactTab.Show(dockPanel1);
+            
         }
 
         private void tssbProfile_Click(object sender, EventArgs e)
@@ -164,8 +169,7 @@ namespace Atiran.Messenger.Forms
 
         private void MainMessanger_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _contactTab.timer1.Stop();
-
+            _contactTab.th.Abort();
         }
 
         #region Method
