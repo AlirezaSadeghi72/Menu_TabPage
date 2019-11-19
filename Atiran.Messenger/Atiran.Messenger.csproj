@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Class\ServiceServer.cs" />
     <Compile Include="Forms\ChatTabs\ChatHistory.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -79,6 +80,9 @@
     <EmbeddedResource Include="Forms\ChatTabs\ChatHistory.resx">
       <DependentUpon>ChatHistory.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ChatTabs\ContactTab.resx">
+      <DependentUpon>ContactTab.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainMessanger.resx">
       <DependentUpon>MainMessanger.cs</DependentUpon>
     </EmbeddedResource>
@@ -87,5 +91,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
 using Atiran.DataLayer.Model;
 using Atiran.DataLayer.Services.Messenger;
+using Atiran.Messenger.Class;
 using Atiran.Utility.Docking2;
 using Form = Atiran.DataLayer.Model.Form;
 
@@ -14,15 +18,14 @@ namespace Atiran.Messenger.Forms.ChatTabs
 {
     public class ContactTab : DockContent
     {
+        public Thread th;
+
         private List<contacts> _historyUser;
 
         private string _userName;
         private DockPanel _dockPanel;
         private List<Users> AllUsers;
-        //private List<Contacts> HistoryUserChat;
         private System.Windows.Forms.TextBox txtSearch;
-        public Timer timer1;
-        private System.ComponentModel.IContainer components;
         private DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridView dataGridView1;
 
@@ -35,11 +38,9 @@ namespace Atiran.Messenger.Forms.ChatTabs
         }
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -78,12 +79,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.Column1.Name = "Column1";
             this.Column1.ReadOnly = true;
             // 
-            // timer1
-            // 
-            this.timer1.Interval = 5000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // Contact
+            // ContactTab
             // 
             this.ClientSize = new System.Drawing.Size(284, 261);
             this.Controls.Add(this.dataGridView1);
@@ -91,7 +87,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.DockAreas = ((Atiran.Utility.Docking2.DockAreas)((Atiran.Utility.Docking2.DockAreas.DockLeft | Atiran.Utility.Docking2.DockAreas.DockRight)));
             this.Font = new System.Drawing.Font("IRANSans(FaNum)", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.HideOnClose = true;
-            this.Name = "Contact";
+            this.Name = "ContactTab";
             this.ShowHint = Atiran.Utility.Docking2.DockState.DockLeft;
             this.Load += new System.EventHandler(this.Contact_Load);
             this.Enter += new System.EventHandler(this.Contact_Enter);
@@ -107,29 +103,38 @@ namespace Atiran.Messenger.Forms.ChatTabs
             dataGridView1.DataSource = _historyUser;
             SetGrid();
             AllUsers = Connection.AllUser;
+            //دريافت پيام از سرور فعال ميشود
+
+            th = new Thread(listenRoutine);
+            th.IsBackground = true;
+            th.Priority = ThreadPriority.Normal;
+            th.Start();
+            
+            //--------
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void RefreshList()
         {
-            if (IsHidden)
-            { timer1.Stop(); }
-            else
-            {
-                _historyUser = Connection.GetHistoryContacts(_userName);
-                dataGridView1.DataSource = _historyUser;
-                SetGrid();
-            }
+            _historyUser = Connection.GetHistoryContacts(_userName);
+            dataGridView1.DataSource = _historyUser;
+            SetGrid();
         }
 
         private void Contact_Validated(object sender, EventArgs e)
         {
             if (IsHidden)
-                timer1.Stop();
+            {
+                //غير فعال كردن دريافت  پيام از سرور براي اين فرم
+                th.Abort();
+                //timer1.Stop();
+            }
         }
 
         private void Contact_Enter(object sender, EventArgs e)
         {
-            timer1.Start();
+            // فعال كردن دريافت  پيام از سرور براي اين فرم
+            th.Start();
+            //timer1.Start();
         }
 
 
@@ -161,6 +166,46 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //dataGridView1.Columns["situation"].Width = 10;
             //dataGridView1.Columns["situation"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             //dataGridView1.Columns["situation"].HeaderText = "وضعيت انلايني كاربر";
+        }
+
+        private void listenRoutine()
+        {
+            EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
+            byte[] buffer = new byte[4096];
+            int inLength = 0;
+            string msg;
+            string cmd;
+            while (true)
+            {
+                try
+                {
+                    inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP);
+                }
+
+                catch (Exception)
+                {
+                    ServiceServer.T.Close();
+                    //richTextBoxBoard.AppendText(time + " اتصال از بین رفته است");
+                    th.Abort();
+                }
+
+                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                string[] c = msg.Split('|');
+                cmd = c[0];
+                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                switch (cmd)
+                {
+                    case "0":
+                    case "99":
+                    case "2":
+
+                        RefreshList();
+                        break;
+                    
+                }
+            }
+
         }
 
         private void OpenTab(string UserName)

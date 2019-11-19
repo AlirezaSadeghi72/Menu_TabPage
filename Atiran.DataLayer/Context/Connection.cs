@@ -750,8 +750,16 @@ namespace Atiran.DataLayer.Context
                 }
             }
 
-
             return new List<contacts>();
+        }
+
+
+        public static int GetNumberMessageNotRed(int UserID)
+        {
+            using (var ctx = new DBMessengerEntities())
+            {
+                return ctx.MessageNotRed.AsNoTracking().Count(c => (c.ToTocen == UserID));
+            }
         }
 
         //public static bool SendMessage(string Text, int UserIDFrom, int UserIDTo)
