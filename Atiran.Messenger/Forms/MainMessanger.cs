@@ -28,6 +28,7 @@ namespace Atiran.Messenger.Forms
         private ToolStripButton tsbContact;
         private ToolStripSplitButton tssbProfile;
         private ToolStripComboBox toolStripComboBox2;
+        private ToolStripDropDownButton ListServerLocal;
         private List<Users> AllUsers;
         //private DeskTab _deskTab;
 
@@ -50,6 +51,7 @@ namespace Atiran.Messenger.Forms
             this.tsbContact = new System.Windows.Forms.ToolStripButton();
             this.tssbProfile = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripComboBox2 = new System.Windows.Forms.ToolStripComboBox();
+            this.ListServerLocal = new System.Windows.Forms.ToolStripDropDownButton();
             ((System.ComponentModel.ISupportInitialize)(this.dockPanel1)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -77,7 +79,8 @@ namespace Atiran.Messenger.Forms
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbContact,
             this.tssbProfile,
-            this.toolStripComboBox2});
+            this.toolStripComboBox2,
+            this.ListServerLocal});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -109,6 +112,15 @@ namespace Atiran.Messenger.Forms
             this.toolStripComboBox2.Size = new System.Drawing.Size(121, 25);
             this.toolStripComboBox2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripComboBox2_KeyDown);
             this.toolStripComboBox2.TextChanged += new System.EventHandler(this.toolStripComboBox2_TextChanged);
+            // 
+            // ListServerLocal
+            // 
+            this.ListServerLocal.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.ListServerLocal.Image = ((System.Drawing.Image)(resources.GetObject("ListServerLocal.Image")));
+            this.ListServerLocal.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ListServerLocal.Name = "ListServerLocal";
+            this.ListServerLocal.Size = new System.Drawing.Size(196, 22);
+            this.ListServerLocal.Text = "ليست فرم هاي متصل به سرور لوكال";
             // 
             // MainMessanger
             // 
@@ -144,7 +156,7 @@ namespace Atiran.Messenger.Forms
         }
 
         #region Event
-        
+
         private void tsbContact_Click(object sender, EventArgs e)
         {
             _contactTab.Text = "ليست مخاطبين";
@@ -205,10 +217,10 @@ namespace Atiran.Messenger.Forms
         private object sendlocker = new Object();
         private object receivelocker = new Object();
 
-        TcpListener server;
-        Socket client;
-        Thread serverTh;
-        Thread clientTh;
+        TcpListener serverLocal;
+        Socket clientFormSocket;
+        //Thread serverLocalTh;
+        Thread clientFormTh;
         Hashtable HT = new Hashtable();
         //string serverIP = ServiceServer.serverIPLocal;
         //private string serverPort = ServiceServer.serverPortLocal;
@@ -216,26 +228,28 @@ namespace Atiran.Messenger.Forms
         private async void StartServerRoutineLocal()
         {
             IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
-            server = new TcpListener(EP);
-            server.Start(100);
+            serverLocal = new TcpListener(EP);
+            serverLocal.Start(100);
             while (true)
             {
-                client = await Task.Run(() => server.AcceptSocket());
-                clientTh = new Thread(clientRoutine);
-                clientTh.IsBackground = true;
+                clientFormSocket = await Task.Run(() => serverLocal.AcceptSocket());
+                clientFormTh = new Thread(clientRoutine);
+                clientFormTh.IsBackground = true;
                 //clientTh.Priority = ThreadPriority.Normal;
-                clientTh.Start();
+                clientFormTh.Start();
             }
         }
 
         private void clientRoutine()
         {
-            Socket sck = client;
+            Socket sck = clientFormSocket;
+            Thread th = clientFormTh;
             string socketname = "";
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
+
                     byte[] buffer = new byte[4096];
                     int inLength = sck.Receive(buffer);
                     lock (receivelocker)
@@ -243,74 +257,82 @@ namespace Atiran.Messenger.Forms
                         string msg = Encoding.UTF8.GetString(buffer, 0, inLength);
                         string[] c = msg.Split('|');
                         string cmd = c[0];
-                        switch (cmd)
+                        switch (cmd.ToLower())
                         {
-                            case "open": // for Form login
+                            case "login": // for Form login
                                 {
-                                    break;
-                                }
-                            case "send": 
-                                {
+                                    string FormName = c[1];
+                                    socketname = FormName;
+                                    lock (listlocker)
+                                    {
+                                        //add Socket Form To List Socket in Servr Local
+                                        HT.Add(socketname, sck);
+                                        ListServerLocal.DropDown.Items.Add(socketname);
+                                        //sendMessageToServer("7|" + _userName + "|red|" + socketname);
+
+                                    }
 
                                     break;
                                 }
-                            case "reseve":
+                            case "send":
                                 {
+
+                                    lock (sendlocker)
+                                    {
+                                        string[] msg1 = c;
+                                        c[0] = "2";
+                                        string ms = "";
+                                        foreach (string s in msg1)
+                                        {
+                                            ms += s + "|";
+                                        }
+                                        //ms checi shavad ka dorost bashad
+                                        ms = ms.Remove(ms.Length - 1);
+                                        // sent message from Server Local To Server
+                                        sendMessageToServer(ms);
+                                    }
 
                                     break;
                                 }
-                            case "0":
+                            case "close":
                                 {
-
-                                    break;
-                                }
-                            case "2":
-                                {
-
-                                    break;
-                                }
-                            case "7":
-                                {
-
-                                    break;
-                                }
-                            case "9":
-                                {
-
+                                    lock (listlocker)
+                                    {
+                                        HT.Remove(socketname);
+                                        var ali = ListServerLocal.DropDown.Items.Cast<ToolStripItem>()
+                                            .FirstOrDefault(w => w.Text == socketname);
+                                        if (ali != null)
+                                            ListServerLocal.DropDown.Items.Remove(ali);
+                                    }
                                     break;
                                 }
                         }
                     }
+
                 }
-                catch (Exception)
+            }
+            catch (Exception)
+            {
+                lock (receivelocker)
                 {
-                    lock (receivelocker)
+                    lock (listlocker)
                     {
-                        lock (listlocker)
-                        {
-                            HT.Remove(socketname);
-                        }
-                        Console.WriteLine(socketname + "has lost");
-                        Thread.Sleep(500);
-                        //براي همه پيام خروج كاربر
-                        //soketname
-                        //راميفرسته
-                        //sendToAll("99" + "|server|" + socketname + " has lost connection");
-
-                        ////ليست افراد آنلاين رو براي همه ميفرسته
-                        //sendToAll(0 + "|server|" + getOnlineList());
-
-                        //th.Abort();
+                        HT.Remove(socketname);
+                        var ali = ListServerLocal.DropDown.Items.Cast<ToolStripItem>()
+                            .FirstOrDefault(w => w.Text == socketname);
+                        if (ali != null)
+                            ListServerLocal.DropDown.Items.Remove(ali);
                     }
                 }
+
+                th.Abort();
             }
         }
 
-        private void sendToAll(string str)
+        private void sendToAllForms(string str)
         {
 
             byte[] buffer = Encoding.UTF8.GetBytes(str);
-            /*List<Socket> sks = HT.Values.Cast<Socket>().ToList();*/
 
             lock (listlocker)
             {
@@ -338,48 +360,30 @@ namespace Atiran.Messenger.Forms
 
         private async void listenRoutineServer()
         {
-            //IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
-            //Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            //T.Connect(EP);
-
             EndPoint serverEP = (EndPoint)ServiceServer.socketSever.RemoteEndPoint;
             byte[] buffer = new byte[4096];
             int inLength = 0;
             string msg;
-            string cmd;
-            string who;
-            string str;
-
             while (true)
             {
-                try
+                await Task.Run(() =>
                 {
-                    await Task.Run(() => { inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP); });
-                }
+                    try
+                    {
+                        inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP);
+                    }
 
-                catch (Exception e)
-                {
-                    var ali = e.Message;
-                    //th.Abort();
-                    break;
-                    //continue;
-                }
+                    catch (Exception e)
+                    {
+                        var ali = e.Message;
+                        //th.Abort();
+                        //break;
+                        //continue;
+                    }
+                });
 
                 msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                string[] c = msg.Split('|');
-                cmd = c[0];
-                who = c[1];
-                str = c[2];
-                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                switch (cmd)
-                {
-                    case "0":
-                        {
-
-                            break;
-                        }
-                }
+                sendToAllForms(msg);
             }
         }
 
@@ -403,8 +407,11 @@ namespace Atiran.Messenger.Forms
             try
             {
                 HT.Clear();
-                serverTh.Abort();
-                clientTh.Abort();
+
+                //serverLocalTh.Abort();
+                clientFormSocket.Close();
+                clientFormSocket.Dispose();
+                clientFormTh.Abort();
             }
             catch (Exception)
             {

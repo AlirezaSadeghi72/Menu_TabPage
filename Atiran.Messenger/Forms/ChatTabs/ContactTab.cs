@@ -107,10 +107,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //دريافت پيام از سرور فعال ميشود
             listenRoutineLocal();
             //--------
+
+            sendMessageToServerLocal("login|" + Text);
+
         }
 
         #region Event
-        
+
         private void RefreshList()
         {
             _historyUser = Connection.GetHistoryContacts(_userName);
@@ -150,6 +153,18 @@ namespace Atiran.Messenger.Forms.ChatTabs
             OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
         }
 
+        private void ContactTab_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try
+            {
+                sendMessageToServerLocal("close|" + Text);
+                T.Close();
+            }
+            catch (Exception)
+            {
+            }
+        }
+
         #endregion
 
         #region Event Override
@@ -159,13 +174,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
             switch (keyData)
             {
                 case Keys.Enter:
-                {
-                    if (dataGridView1.SelectedRows.Count > 0)
                     {
-                        OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+                        if (dataGridView1.SelectedRows.Count > 0)
+                        {
+                            OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+                        }
+                        return true;
                     }
-                    return true;
-                }
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
@@ -222,12 +237,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         #region Messenger
 
+        private Socket T;
         private async void listenRoutineLocal()
         {
             IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal),
                 int.Parse(ServiceServer.serverPortLocal));
 
-            Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             T.Connect(EP);
 
             EndPoint serverEP = (EndPoint)T.RemoteEndPoint;
@@ -235,49 +251,66 @@ namespace Atiran.Messenger.Forms.ChatTabs
             int inLength = 0;
             string msg;
             string cmd;
-            while (true)
+
+            try
             {
-                try
+                while (true)
                 {
-                    await Task.Run(() => inLength = T.ReceiveFrom(buffer, ref serverEP));
+                    await Task.Run(() =>
+                    {
+                        try
+                        {
+                            inLength = T.ReceiveFrom(buffer, ref serverEP);
+                        }
+
+                        catch (Exception e)
+                        {
+                            var ali = e.Message;
+                            //th.Abort();
+                            //continue;
+                            //break;
+                        }
+                    });
+
+                    msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                    string[] c = msg.Split('|');
+                    cmd = c[0];
+                    //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                    switch (cmd)
+                    {
+                        case "0":
+                        case "99":
+                        case "2":
+                            RefreshList();
+                            break;
+
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                T.Close();
+                MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
+            }
 
-                catch (Exception)
-                {
-                    //th.Abort();
-                    //continue;
-                    break;
-                }
+        }
 
-                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                string[] c = msg.Split('|');
-                cmd = c[0];
-                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                switch (cmd)
-                {
-                    case "0":
-                    case "99":
-                    case "2":
-                        RefreshList();
-                        break;
-
-                }
+        private void sendMessageToServerLocal(string str)
+        {
+            if (T.Connected)
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(str);
+                T.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            }
+            else
+            {
+                MessageBox.Show("اتصال سوكت برقرار نيست");
             }
         }
 
         #endregion
 
-        private void ContactTab_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            try
-            {
-                //th.Abort();
-            }
-            catch (Exception)
-            {
 
-            }
-        }
     }
 }

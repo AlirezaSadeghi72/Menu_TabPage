@@ -303,13 +303,15 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
                 //مارك كردن پيام هاي خوانده نشده اين كاربر 
                 //model : 7|to|red|From
-                sendMessageToServerLocal("7|" + _userIdFrom + "|red|" + _userIdTo);
+
+                sendMessageToServerLocal("login|" + Text);
+
             }
             //--------
         }
 
         #region Event
-        
+
         private void btnSend_Click(object sender, EventArgs e)
         {
             if (txtMessage.Text.Trim() != "")
@@ -375,7 +377,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             try
             {
-                //th.Abort();
+                sendMessageToServerLocal("close|" + Text);
+                T.Close();
             }
             catch (Exception)
             {
@@ -455,7 +458,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
             //        MessageBoxIcon.Error);
             //}
-            sendMessageToServerLocal("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+            sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
 
         }
 
@@ -463,10 +466,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         #region Messenger Link To Server Local
 
+        private Socket T;
+
         private async void listenRoutineLocal()
         {
-            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
-            Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal),
+                    int.Parse(ServiceServer.serverPortLocal));
+            T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             T.Connect(EP);
 
             EndPoint serverEP = (EndPoint)T.RemoteEndPoint;
@@ -476,97 +482,109 @@ namespace Atiran.Messenger.Forms.ChatTabs
             string cmd;
             string who;
             string str;
-
-            while (true)
+            try
             {
-                try
-                {
-                    await Task.Run(() => { inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP); });
-                }
 
-                catch (Exception e)
+                while (true)
                 {
-                    var ali = e.Message;
-                    //th.Abort();
-                    break;
-                    //continue;
-                }
-
-                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                string[] c = msg.Split('|');
-                cmd = c[0];
-                who = c[1];
-                str = c[2];
-                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                switch (cmd)
-                {
-                    case "0":
-                    case "99":
+                    await Task.Run(
+                        () =>
                         {
-                            string[] M = str.Split(',');
-                            if (M.Any(a => a == _userNameTo))
+                            try
                             {
-                                lblSituation.Text = "انلاين";
-                                lblSituation.BackColor = Color.FromArgb(128, 255, 128);
-                            }
-                            else
-                            {
-                                lblSituation.Text = "افلاين";
-                                lblSituation.BackColor = Color.FromArgb(255, 192, 128);
+                                inLength = T.ReceiveFrom(buffer, ref serverEP);
                             }
 
-                            break;
-                        }
-
-                    case "2":
-                        {
-                            int fromId = Connection.AllUser.FirstOrDefault(f => f.UserName == who).UserID;
-                            int toId = Connection.AllUser.FirstOrDefault(f => f.UserName == c[3]).UserID;
-                            string dateTime = c[4];
-                            string MessageId = c[5];
-                            var MessageSend = new Messages()
+                            catch (Exception e)
                             {
-                                Text = str,
-                                FromTocen = fromId,
-                                ToTocen = toId,
-                                MessageDeleteTo = false,
-                                MessageDeleteFrom = false,
-                                DateTimeSend = dateTime,
-                                MessageID = Convert.ToInt32(MessageId)
-                            };
-                            if (fromId == _userIdFrom && toId == _userIdTo)
-                            {
-                                _historyMessagese.Add(MessageSend);
-                                dataGridView1.DataSource = _historyMessagese.ToList();
-                                SetGrid();
-                                //flashWindow();
-                                txtMessage.Text = "";
-
+                                var ali = e.Message;
+                                //th.Abort();
+                                //break;
+                                //continue;
                             }
-                            else if (toId == _userIdFrom && fromId == _userIdTo)
+                        });
+
+                    msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                    string[] c = msg.Split('|');
+                    cmd = c[0];
+                    who = c[1];
+                    str = c[2];
+                    //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                    switch (cmd)
+                    {
+                        case "0":
+                        case "99":
                             {
+                                string[] M = str.Split(',');
+                                if (M.Any(a => a == _userNameTo))
+                                {
+                                    lblSituation.Text = "انلاين";
+                                    lblSituation.BackColor = Color.FromArgb(128, 255, 128);
+                                }
+                                else
+                                {
+                                    lblSituation.Text = "افلاين";
+                                    lblSituation.BackColor = Color.FromArgb(255, 192, 128);
+                                }
 
-                                _historyMessagese.Add(MessageSend);
-                                dataGridView1.DataSource = _historyMessagese.ToList();
-                                SetGrid();
-                                //flashWindow();
-
+                                break;
                             }
 
-                            break;
-                        }
+                        case "2":
+                            {
+                                int fromId = Connection.AllUser.FirstOrDefault(f => f.UserName == who).UserID;
+                                int toId = Connection.AllUser.FirstOrDefault(f => f.UserName == c[3]).UserID;
+                                string dateTime = c[4];
+                                string MessageId = c[5];
+                                var MessageSend = new Messages()
+                                {
+                                    Text = str,
+                                    FromTocen = fromId,
+                                    ToTocen = toId,
+                                    MessageDeleteTo = false,
+                                    MessageDeleteFrom = false,
+                                    DateTimeSend = dateTime,
+                                    MessageID = Convert.ToInt32(MessageId)
+                                };
+                                if (fromId == _userIdFrom && toId == _userIdTo)
+                                {
+                                    _historyMessagese.Add(MessageSend);
+                                    dataGridView1.DataSource = _historyMessagese.ToList();
+                                    SetGrid();
+                                    //flashWindow();
+                                    txtMessage.Text = "";
 
+                                }
+                                else if (toId == _userIdFrom && fromId == _userIdTo)
+                                {
+
+                                    _historyMessagese.Add(MessageSend);
+                                    dataGridView1.DataSource = _historyMessagese.ToList();
+                                    SetGrid();
+                                    //flashWindow();
+
+                                }
+
+                                break;
+                            }
+
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                T.Close();
+                MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
             }
         }
 
         private void sendMessageToServerLocal(string str)
         {
-            if (ServiceServer.socketSever.Connected)
+            if (T.Connected)
             {
                 byte[] buffer = Encoding.UTF8.GetBytes(str);
-                ServiceServer.socketSever.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                T.Send(buffer, 0, buffer.Length, SocketFlags.None);
             }
             else
             {

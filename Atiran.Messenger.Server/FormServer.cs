@@ -236,6 +236,8 @@ namespace Atiran.Messenger.Server
         private void clientRoutine()
         {
             Socket sck = client;
+            Thread th = clientTh;
+
             string socketname = "";
             while (true)
             {
@@ -359,12 +361,12 @@ namespace Atiran.Messenger.Server
                         //براي همه پيام خروج كاربر
                         //soketname
                         //راميفرسته
-                        sendToAll("99" + "|server|" + socketname + " has lost connection");
+                        //sendToAll("99" + "|server|" + socketname + " has lost connection");
 
                         //ليست افراد آنلاين رو براي همه ميفرسته
                         sendToAll(0 + "|server|" + getOnlineList());
 
-                        //th.Abort();
+                        th.Abort();
                     }
                 }
 

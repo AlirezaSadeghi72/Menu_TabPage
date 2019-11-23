@@ -18,7 +18,7 @@ namespace Atiran.Messenger.Class
 
         public static string serverIPLocal
         {
-            get => "13.72.06.20";
+            get => "127.0.0.1";
         }
         public static string serverPortLocal
         {
