@@ -195,10 +195,11 @@ namespace Atiran.Messenger.Server
         private void buttonStart_Click(object sender, EventArgs e)
         {
             serverPort = textBox1.Text;
+            textBox1.Enabled = false;
             CheckForIllegalCrossThreadCalls = false;
             serverTh = new Thread(serverRoutine);
             serverTh.IsBackground = true;
-            serverTh.Priority = ThreadPriority.Normal;
+            //serverTh.Priority = ThreadPriority.Normal;
             serverTh.Start();
             buttonStart.Enabled = false;
         }
@@ -227,7 +228,7 @@ namespace Atiran.Messenger.Server
                 client = server.AcceptSocket();
                 clientTh = new Thread(clientRoutine);
                 clientTh.IsBackground = true;
-                clientTh.Priority = ThreadPriority.Normal;
+                //clientTh.Priority = ThreadPriority.Normal;
                 clientTh.Start();
             }
         }
@@ -235,7 +236,6 @@ namespace Atiran.Messenger.Server
         private void clientRoutine()
         {
             Socket sck = client;
-            Thread th = clientTh;
             string socketname = "";
             while (true)
             {
@@ -254,7 +254,7 @@ namespace Atiran.Messenger.Server
                         string str = c[2];
                         DateTime dt = DateTime.Now;
                         string dateTime = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") +
-                                          "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.ToString("hh:mm:ss");
+                                          "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.ToString("HH:mm:ss");
                         //MessageBox.Show("SERVER  Cmd:" + cmd + " Who:" + who + " Str:" + str);
                         switch (cmd)
                         {
@@ -268,9 +268,7 @@ namespace Atiran.Messenger.Server
                                         lock (sendlocker)
                                         {
                                             //براي خود كاربر پيام خوش آمد ميفرسته
-                                            connection.loginUser(who, true);
                                             sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
-                                            connection.RefreshUsers();
                                         }
 
                                         break;
@@ -289,8 +287,10 @@ namespace Atiran.Messenger.Server
                                     //آنلاين شده
                                     //sendToAll("99" + "|server|" + who + " has logged in");
 
+                                    connection.SituationUser(who, true);
                                     //ليست افراد آنلاين رو براي همه ميفرسته
                                     sendToAll(cmd + "|server|" + getOnlineList());
+                                    connection.RefreshUsers();
 
                                     break;
                                 }
@@ -309,13 +309,18 @@ namespace Atiran.Messenger.Server
                                         MessageDeleteTo = false,
                                         MessageID = connection.AllUsers.First(f => f.UserName == who).NextMessageID ?? 1
                                     };
-                                    connection.SendMessage(Message);
+
+                                    if ((Socket)HT[to] == null)
+                                        connection.SendMessage_temp(Message);
+                                    else
+                                        connection.SendMessage(Message);
+
 
                                     //پيام خصوصي براي كاربر 
                                     //(to)
                                     //ميفرسته
-                                    sendToClient(cmd + "|" + who + "|" + str+"|"+ to+"|"
-                                                 + dateTime + "|" +Message.MessageID, who, to);
+                                    sendToClient(cmd + "|" + who + "|" + str + "|" + to + "|"
+                                                 + dateTime + "|" + Message.MessageID, who, to);
                                     break;
                                 }
                             case "7":
@@ -326,6 +331,12 @@ namespace Atiran.Messenger.Server
                                     connection.RedMessage(fromID, ToID);
                                     sendToAll("0" + "|server|" + getOnlineList());
 
+                                    break;
+                                }
+                            case "9":
+                                {
+                                    connection.SituationUser(who, false, dateTime);
+                                    connection.RefreshUsers();
                                     break;
                                 }
                         }
@@ -341,7 +352,7 @@ namespace Atiran.Messenger.Server
                             HT.Remove(socketname);
                             listBoxUser.Items.Remove(socketname);
 
-                            connection.loginUser(socketname, false);
+                            connection.SituationUser(socketname, false);
                         }
                         Console.WriteLine(socketname + "has lost");
                         Thread.Sleep(500);
@@ -353,7 +364,7 @@ namespace Atiran.Messenger.Server
                         //ليست افراد آنلاين رو براي همه ميفرسته
                         sendToAll(0 + "|server|" + getOnlineList());
 
-                        th.Abort();
+                        //th.Abort();
                     }
                 }
 
@@ -392,7 +403,7 @@ namespace Atiran.Messenger.Server
                     lock (sendlocker)
                     {
                         //براي
-                        //user
+                        //userTo
                         //پيام خصوصي ارسال ميكند
                         sck.Send(buffer, 0, buffer.Length, SocketFlags.None);
                     }
@@ -401,15 +412,15 @@ namespace Atiran.Messenger.Server
                 {
                     ;
                 }
-                Socket sck1 = (Socket)HT[userFrom];
 
+                Socket sck1 = (Socket)HT[userFrom];
                 try
                 {
                     lock (sendlocker)
                     {
                         //براي
-                        //user
-                        //پيام خصوصي ارسال ميكند
+                        //userFrom
+                        //پيام خصوصي ارسال ميكند كه پيام ارسال شده
                         sck1.Send(buffer, 0, buffer.Length, SocketFlags.None);
                     }
                 }

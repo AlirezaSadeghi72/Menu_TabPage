@@ -23,7 +23,7 @@ namespace Atiran.Messenger.Server.DataLayer.Context
             get => _allUsers;
         }
 
-        public static void loginUser(string UserNsme, bool situation)
+        public static void SituationUser(string UserNsme, bool situation,string DateTime = null)
         {
             using (var ctx = new DBMessengerEntities())
             {
@@ -31,16 +31,43 @@ namespace Atiran.Messenger.Server.DataLayer.Context
                 if (user != null)
                 {
                     user.situation = situation;
+                    if (!situation && DateTime != null)
+                    {
+                        user.LastSeenReserve = DateTime;
+                    }
+                    else
+                    {
+                        user.LastSeenReserve = null;
+                    }
                     ctx.SaveChanges();
                 }
             }
         }
 
-        public static void SendMessage(Message_Temp mes)
+        public static void SendMessage_temp(Message_Temp message)
         {
             using (var ctx = new DBMessengerEntities())
             {
-                //ctx.
+                ctx.Message_Temp.Add(message);
+                ctx.SaveChanges();
+            }
+        }
+        public static void SendMessage(Message_Temp message)
+        {
+            var msg = new Messages()
+            {
+                Text = message.Text,
+                FromTocen = message.FromTocen,
+                ToTocen = message.ToTocen,
+                MessageID = message.MessageID,
+                MessageDeleteTo = message.MessageDeleteTo,
+                MessageDeleteFrom = message.MessageDeleteFrom,
+                DateTimeSend = message.DateTimeSend
+            };
+            using (var ctx = new DBMessengerEntities())
+            {
+                ctx.Messages.Add(msg);
+                ctx.SaveChanges();
             }
         }
 
@@ -48,6 +75,7 @@ namespace Atiran.Messenger.Server.DataLayer.Context
         {
             using (var ctx = new DBMessengerEntities())
             {
+                //باگ داره ازديتابيس پاك نميكنه اطلاعات مورد نظر
                 var result = ctx.MessageNotRed.AsNoTracking()
                     .Where(w => w.FromTocen == UserIdFrom && w.ToTocen == UserIdTo).ToList();
                 result.Clear();
