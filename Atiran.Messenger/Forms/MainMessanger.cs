@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
@@ -131,12 +135,20 @@ namespace Atiran.Messenger.Forms
             toolStripComboBox2.Items.AddRange(AllUsers.ToArray());
             toolStripComboBox2.ComboBox.DisplayMember = "UserName";
             toolStripComboBox2.ComboBox.ValueMember = "UserID";
+
+            //start Server Local For Menage Form
+            StartServerRoutineLocal();
+
+            //conect Server Local To Server
+            listenRoutineServer();
         }
+
+        #region Event
+        
         private void tsbContact_Click(object sender, EventArgs e)
         {
             _contactTab.Text = "ليست مخاطبين";
             _contactTab.Show(dockPanel1);
-            
         }
 
         private void tssbProfile_Click(object sender, EventArgs e)
@@ -166,11 +178,7 @@ namespace Atiran.Messenger.Forms
             }
         }
 
-
-        private void MainMessanger_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            _contactTab.th.Abort();
-        }
+        #endregion
 
         #region Method
 
@@ -190,6 +198,218 @@ namespace Atiran.Messenger.Forms
 
 
         #endregion
+
+        #region Server Local
+
+        private object listlocker = new Object();
+        private object sendlocker = new Object();
+        private object receivelocker = new Object();
+
+        TcpListener server;
+        Socket client;
+        Thread serverTh;
+        Thread clientTh;
+        Hashtable HT = new Hashtable();
+        //string serverIP = ServiceServer.serverIPLocal;
+        //private string serverPort = ServiceServer.serverPortLocal;
+
+        private async void StartServerRoutineLocal()
+        {
+            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
+            server = new TcpListener(EP);
+            server.Start(100);
+            while (true)
+            {
+                client = await Task.Run(() => server.AcceptSocket());
+                clientTh = new Thread(clientRoutine);
+                clientTh.IsBackground = true;
+                //clientTh.Priority = ThreadPriority.Normal;
+                clientTh.Start();
+            }
+        }
+
+        private void clientRoutine()
+        {
+            Socket sck = client;
+            string socketname = "";
+            while (true)
+            {
+                try
+                {
+                    byte[] buffer = new byte[4096];
+                    int inLength = sck.Receive(buffer);
+                    lock (receivelocker)
+                    {
+                        string msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+                        string[] c = msg.Split('|');
+                        string cmd = c[0];
+                        switch (cmd)
+                        {
+                            case "open": // for Form login
+                                {
+                                    break;
+                                }
+                            case "send": 
+                                {
+
+                                    break;
+                                }
+                            case "reseve":
+                                {
+
+                                    break;
+                                }
+                            case "0":
+                                {
+
+                                    break;
+                                }
+                            case "2":
+                                {
+
+                                    break;
+                                }
+                            case "7":
+                                {
+
+                                    break;
+                                }
+                            case "9":
+                                {
+
+                                    break;
+                                }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    lock (receivelocker)
+                    {
+                        lock (listlocker)
+                        {
+                            HT.Remove(socketname);
+                        }
+                        Console.WriteLine(socketname + "has lost");
+                        Thread.Sleep(500);
+                        //براي همه پيام خروج كاربر
+                        //soketname
+                        //راميفرسته
+                        //sendToAll("99" + "|server|" + socketname + " has lost connection");
+
+                        ////ليست افراد آنلاين رو براي همه ميفرسته
+                        //sendToAll(0 + "|server|" + getOnlineList());
+
+                        //th.Abort();
+                    }
+                }
+            }
+        }
+
+        private void sendToAll(string str)
+        {
+
+            byte[] buffer = Encoding.UTF8.GetBytes(str);
+            /*List<Socket> sks = HT.Values.Cast<Socket>().ToList();*/
+
+            lock (listlocker)
+            {
+
+                foreach (Socket s in HT.Values)
+                {
+                    try
+                    {
+                        lock (sendlocker)
+                        {
+                            s.Send(buffer, 0, buffer.Length, SocketFlags.None);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        ;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Server Local To Server
+
+        private async void listenRoutineServer()
+        {
+            //IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
+            //Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            //T.Connect(EP);
+
+            EndPoint serverEP = (EndPoint)ServiceServer.socketSever.RemoteEndPoint;
+            byte[] buffer = new byte[4096];
+            int inLength = 0;
+            string msg;
+            string cmd;
+            string who;
+            string str;
+
+            while (true)
+            {
+                try
+                {
+                    await Task.Run(() => { inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP); });
+                }
+
+                catch (Exception e)
+                {
+                    var ali = e.Message;
+                    //th.Abort();
+                    break;
+                    //continue;
+                }
+
+                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                string[] c = msg.Split('|');
+                cmd = c[0];
+                who = c[1];
+                str = c[2];
+                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                switch (cmd)
+                {
+                    case "0":
+                        {
+
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void sendMessageToServer(string str)
+        {
+            if (ServiceServer.socketSever.Connected)
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(str);
+                ServiceServer.socketSever.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            }
+            else
+            {
+                MessageBox.Show("اتصال سوكت برقرار نيست");
+            }
+        }
+
+        #endregion
+
+        private void MainMessanger_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try
+            {
+                HT.Clear();
+                serverTh.Abort();
+                clientTh.Abort();
+            }
+            catch (Exception)
+            {
+            }
+        }
 
     }
 }
