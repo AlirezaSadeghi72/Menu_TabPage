@@ -546,13 +546,7 @@ namespace Atiran.MenuBar.Panels
 
         private async void btnMessenger_Click(object sender, EventArgs e)
         {
-            if (ServiceServer.socketSever == null || !ServiceServer.socketSever.Connected)
-            {
-                btnMessenger.Enabled = false;
-                await Task.Run(() => LoginMessenger());
-                btnMessenger.Enabled = true;
-            }
-            else
+            if (ServiceServer.socketSever != null && ServiceServer.socketSever.Connected)
             {
                 //th.Abort();
 
@@ -566,6 +560,13 @@ namespace Atiran.MenuBar.Panels
                 //th.IsBackground = true;
                 ////th.Priority = ThreadPriority.Normal;
                 //th.Start();
+            }
+            else
+            {
+                btnMessenger.Enabled = false;
+                await Task.Run(() => LoginMessenger());
+                btnMessenger.Enabled = true;
+               
             }
         }
 
@@ -598,6 +599,7 @@ namespace Atiran.MenuBar.Panels
             }
             catch (Exception)
             {
+                loginState = 0;
                 MessageBox.Show("ارتباط با سرور پيام رسان ممکن نیست!");
             }
         }
