@@ -566,7 +566,7 @@ namespace Atiran.MenuBar.Panels
                 btnMessenger.Enabled = false;
                 await Task.Run(() => LoginMessenger());
                 btnMessenger.Enabled = true;
-               
+
             }
         }
 
@@ -583,6 +583,7 @@ namespace Atiran.MenuBar.Panels
         private void LoginMessenger()
         {
             CheckForIllegalCrossThreadCalls = false;
+
             try
             {
                 IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIP), int.Parse(ServiceServer.serverPort));
@@ -600,6 +601,7 @@ namespace Atiran.MenuBar.Panels
             catch (Exception)
             {
                 loginState = 0;
+                ServiceServer.socketSever.Close();
                 MessageBox.Show("ارتباط با سرور پيام رسان ممکن نیست!");
             }
         }

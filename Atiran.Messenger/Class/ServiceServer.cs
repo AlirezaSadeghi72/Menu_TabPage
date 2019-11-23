@@ -22,7 +22,7 @@ namespace Atiran.Messenger.Class
         }
         public static string serverPortLocal
         {
-            get => "2006";
+            get => "1993";
         }
 
 

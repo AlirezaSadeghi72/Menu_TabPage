@@ -252,47 +252,36 @@ namespace Atiran.Messenger.Forms.ChatTabs
             string msg;
             string cmd;
 
-            try
+            await Task.Run(() =>
             {
                 while (true)
                 {
-                    await Task.Run(() =>
+                    try
                     {
-                        try
+                        inLength = T.ReceiveFrom(buffer, ref serverEP);
+
+                        msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                        string[] c = msg.Split('|');
+                        cmd = c[0];
+
+                        switch (cmd)
                         {
-                            inLength = T.ReceiveFrom(buffer, ref serverEP);
+                            case "0":
+                            case "99":
+                            case "2":
+                                RefreshList();
+                                break;
                         }
-
-                        catch (Exception e)
-                        {
-                            var ali = e.Message;
-                            //th.Abort();
-                            //continue;
-                            //break;
-                        }
-                    });
-
-                    msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                    string[] c = msg.Split('|');
-                    cmd = c[0];
-                    //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                    switch (cmd)
+                    }
+                    catch (Exception)
                     {
-                        case "0":
-                        case "99":
-                        case "2":
-                            RefreshList();
-                            break;
-
+                        T.Close();
+                        MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
+                        break;
                     }
                 }
-            }
-            catch (Exception)
-            {
-                T.Close();
-                MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
-            }
+            });
 
         }
 
