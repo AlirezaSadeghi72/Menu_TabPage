@@ -324,7 +324,7 @@ namespace Atiran.MenuBar.Forms
             //Quit Messenger
             mainButton1.QuitMessenger();
 
-            Application.ExitThread();
+            Application.Exit();
         }
 
         private void TabBarMenu_FormClosing(object sender, FormClosingEventArgs e)

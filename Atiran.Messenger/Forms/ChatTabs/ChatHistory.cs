@@ -22,15 +22,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
 {
     class ChatHistory : DeskTab
     {
-        private Thread th;
-
-        public ChatHistory(string UserName)
-        {
-            InitializeComponent();
-            ShowQuestionClose = false;
-            _userNameFrom = UserName;
-        }
-
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel3;
@@ -53,6 +44,12 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private PictureBox pictureBox1;
         private static PersianCalendar _pc = new PersianCalendar();
 
+        public ChatHistory(string UserName)
+        {
+            InitializeComponent();
+            ShowQuestionClose = false;
+            _userNameFrom = UserName;
+        }
 
         private void InitializeComponent()
         {
@@ -120,9 +117,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.lblSituation.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.lblSituation.Location = new System.Drawing.Point(66, 34);
             this.lblSituation.Name = "lblSituation";
-            this.lblSituation.Size = new System.Drawing.Size(37, 20);
+            this.lblSituation.Size = new System.Drawing.Size(0, 20);
             this.lblSituation.TabIndex = 4;
-            this.lblSituation.Text = "انلاين";
             // 
             // label1
             // 
@@ -281,6 +277,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             _userNameTo = this.Text;
 
+
             _userIdFrom = Connection.AllUser.First(f => f.UserName == _userNameFrom).UserID;
             _userIdTo = Connection.AllUser.First(f => f.UserName == _userNameTo).UserID;
 
@@ -298,18 +295,21 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //دريافت پيام از سرور فعال ميشود
             else
             {
-                th = new Thread(listenRoutine);
-                th.IsBackground = true;
-                th.Priority = ThreadPriority.Normal;
-                th.Start();
+                //th = new Thread(listenRoutine);
+                listenRoutineLocal();
+                //th.IsBackground = true;
+                ////th.Priority = ThreadPriority.Normal;
+                //th.Start();
 
                 //مارك كردن پيام هاي خوانده نشده اين كاربر 
                 //model : 7|to|red|From
-                sendMessage("7|" + _userIdFrom + "|red|" + _userIdTo);
+                sendMessageToServerLocal("7|" + _userIdFrom + "|red|" + _userIdTo);
             }
             //--------
         }
 
+        #region Event
+        
         private void btnSend_Click(object sender, EventArgs e)
         {
             if (txtMessage.Text.Trim() != "")
@@ -373,8 +373,16 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         private void ChatHistory_FormClosed(object sender, FormClosedEventArgs e)
         {
-            th.Abort();
+            try
+            {
+                //th.Abort();
+            }
+            catch (Exception)
+            {
+            }
         }
+
+        #endregion
 
         #region Event Override
 
@@ -447,30 +455,41 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
             //        MessageBoxIcon.Error);
             //}
-            sendMessage("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+            sendMessageToServerLocal("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
 
         }
 
-        private void listenRoutine()
+        #endregion
+
+        #region Messenger Link To Server Local
+
+        private async void listenRoutineLocal()
         {
-            EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
+            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
+            Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            T.Connect(EP);
+
+            EndPoint serverEP = (EndPoint)T.RemoteEndPoint;
             byte[] buffer = new byte[4096];
             int inLength = 0;
             string msg;
             string cmd;
             string who;
             string str;
+
             while (true)
             {
                 try
                 {
-                    inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP);
+                    await Task.Run(() => { inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP); });
                 }
 
-                catch (Exception)
+                catch (Exception e)
                 {
-                    ServiceServer.T.Close();
-                    th.Abort();
+                    var ali = e.Message;
+                    //th.Abort();
+                    break;
+                    //continue;
                 }
 
                 msg = Encoding.UTF8.GetString(buffer, 0, inLength);
@@ -486,7 +505,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                     case "99":
                         {
                             string[] M = str.Split(',');
-                            if (M.Any(a => a == _userNameFrom))
+                            if (M.Any(a => a == _userNameTo))
                             {
                                 lblSituation.Text = "انلاين";
                                 lblSituation.BackColor = Color.FromArgb(128, 255, 128);
@@ -506,40 +525,32 @@ namespace Atiran.Messenger.Forms.ChatTabs
                             int toId = Connection.AllUser.FirstOrDefault(f => f.UserName == c[3]).UserID;
                             string dateTime = c[4];
                             string MessageId = c[5];
+                            var MessageSend = new Messages()
+                            {
+                                Text = str,
+                                FromTocen = fromId,
+                                ToTocen = toId,
+                                MessageDeleteTo = false,
+                                MessageDeleteFrom = false,
+                                DateTimeSend = dateTime,
+                                MessageID = Convert.ToInt32(MessageId)
+                            };
                             if (fromId == _userIdFrom && toId == _userIdTo)
                             {
-                                var MessageSend = new Messages()
-                                {
-                                    Text = str,
-                                    FromTocen = fromId,
-                                    ToTocen = toId,
-                                    MessageDeleteTo = false,
-                                    MessageDeleteFrom = false,
-                                    DateTimeSend = dateTime,
-                                    MessageID = Convert.ToInt32(MessageId)
-                                };
                                 _historyMessagese.Add(MessageSend);
                                 dataGridView1.DataSource = _historyMessagese.ToList();
                                 SetGrid();
-                                flashWindow();
+                                //flashWindow();
+                                txtMessage.Text = "";
 
                             }
                             else if (toId == _userIdFrom && fromId == _userIdTo)
                             {
-                                var MessageSend = new Messages()
-                                {
-                                    Text = str,
-                                    FromTocen = toId,
-                                    ToTocen = fromId,
-                                    MessageDeleteTo = false,
-                                    MessageDeleteFrom = false,
-                                    DateTimeSend = dateTime,
-                                    MessageID = Convert.ToInt32(MessageId)
-                                };
+
                                 _historyMessagese.Add(MessageSend);
                                 dataGridView1.DataSource = _historyMessagese.ToList();
                                 SetGrid();
-                                flashWindow();
+                                //flashWindow();
 
                             }
 
@@ -550,38 +561,50 @@ namespace Atiran.Messenger.Forms.ChatTabs
             }
         }
 
-        private void sendMessage(string str)
+        private void sendMessageToServerLocal(string str)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(str);
-            ServiceServer.T.Send(buffer, 0, buffer.Length, SocketFlags.None);
-        }
-        #endregion
-
-        #region Flash Window
-
-        [DllImport("user32.dll")]
-        private static extern bool FlashWindowEx(ref FLASHWINFO fi);
-
-        private struct FLASHWINFO
-        {
-            public uint cbSize;
-            public IntPtr hwnd;
-            public uint dwFlags;
-            public uint uCount;
-            public uint dwTimeout;
-        }
-        private void flashWindow()
-        {
-            FLASHWINFO FlashWINInfo = new FLASHWINFO();
-            FlashWINInfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(FlashWINInfo));
-            FlashWINInfo.hwnd = this.Handle;
-            FlashWINInfo.dwFlags = 3 | 2 | 12;
-            FlashWINInfo.uCount = uint.MaxValue;
-            FlashWINInfo.dwTimeout = 0;
-            FlashWindowEx(ref FlashWINInfo);
+            if (ServiceServer.socketSever.Connected)
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(str);
+                ServiceServer.socketSever.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            }
+            else
+            {
+                MessageBox.Show("اتصال سوكت برقرار نيست");
+            }
         }
 
         #endregion
 
+        //#region Flash Window
+
+        //[DllImport("user32.dll")]
+        //private static extern bool FlashWindowEx(ref FLASHWINFO fi);
+
+        //private struct FLASHWINFO
+        //{
+        //    public uint cbSize;
+        //    public IntPtr hwnd;
+        //    public uint dwFlags;
+        //    public uint uCount;
+        //    public uint dwTimeout;
+        //}
+        //private void flashWindow()
+        //{
+        //    FLASHWINFO FlashWINInfo = new FLASHWINFO();
+        //    FlashWINInfo.cbSize = Convert.ToUInt32(Marshal.SizeOf(FlashWINInfo));
+        //    FlashWINInfo.hwnd = this.Handle;
+        //    FlashWINInfo.dwFlags = 3 | 2 | 12;
+        //    FlashWINInfo.uCount = uint.MaxValue;
+        //    FlashWINInfo.dwTimeout = 0;
+        //    FlashWindowEx(ref FlashWINInfo);
+        //}
+
+        //#endregion
+
+        //private async void SetMessage()
+        //{
+        //    await System.Threading.Tasks.Task.Run(() => MessageBox.Show("Test"));
+        //}
     }
 }

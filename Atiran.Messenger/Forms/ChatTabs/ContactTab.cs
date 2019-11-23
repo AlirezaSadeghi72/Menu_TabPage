@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,8 +19,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
 {
     public class ContactTab : DockContent
     {
-        public Thread th;
-
         private List<contacts> _historyUser;
 
         private string _userName;
@@ -36,6 +35,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             _dockPanel = dockPanel;
             _historyUser = Connection.GetHistoryContacts(_userName);
         }
+
         private void InitializeComponent()
         {
             this.txtSearch = new System.Windows.Forms.TextBox();
@@ -89,6 +89,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.HideOnClose = true;
             this.Name = "ContactTab";
             this.ShowHint = Atiran.Utility.Docking2.DockState.DockLeft;
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ContactTab_FormClosed);
             this.Load += new System.EventHandler(this.Contact_Load);
             this.Enter += new System.EventHandler(this.Contact_Enter);
             this.Validated += new System.EventHandler(this.Contact_Validated);
@@ -104,15 +105,12 @@ namespace Atiran.Messenger.Forms.ChatTabs
             SetGrid();
             AllUsers = Connection.AllUser;
             //دريافت پيام از سرور فعال ميشود
-
-            th = new Thread(listenRoutine);
-            th.IsBackground = true;
-            th.Priority = ThreadPriority.Normal;
-            th.Start();
-            
+            listenRoutineLocal();
             //--------
         }
 
+        #region Event
+        
         private void RefreshList()
         {
             _historyUser = Connection.GetHistoryContacts(_userName);
@@ -124,19 +122,56 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             if (IsHidden)
             {
-                //غير فعال كردن دريافت  پيام از سرور براي اين فرم
-                th.Abort();
-                //timer1.Stop();
+                try
+                {
+                    //غير فعال كردن دريافت  پيام از سرور براي اين فرم
+                    //th.Abort();
+                    //timer1.Stop();
+                }
+                catch (Exception)
+                {
+
+                }
             }
         }
 
         private void Contact_Enter(object sender, EventArgs e)
         {
             // فعال كردن دريافت  پيام از سرور براي اين فرم
-           // th.Start();
+            //th = new Thread(listenRoutine);
+            //th.IsBackground = true;
+            ////th.Priority = ThreadPriority.Normal;
+            //th.Start();
             //timer1.Start();
         }
 
+        private void dataGridView1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+        }
+
+        #endregion
+
+        #region Event Override
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Enter:
+                {
+                    if (dataGridView1.SelectedRows.Count > 0)
+                    {
+                        OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+                    }
+                    return true;
+                }
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        #endregion
 
         #region Method
 
@@ -168,46 +203,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //dataGridView1.Columns["situation"].HeaderText = "وضعيت انلايني كاربر";
         }
 
-        private void listenRoutine()
-        {
-            EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
-            byte[] buffer = new byte[4096];
-            int inLength = 0;
-            string msg;
-            string cmd;
-            while (true)
-            {
-                try
-                {
-                    inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP);
-                }
-
-                catch (Exception)
-                {
-                    ServiceServer.T.Close();
-                    //richTextBoxBoard.AppendText(time + " اتصال از بین رفته است");
-                    th.Abort();
-                }
-
-                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                string[] c = msg.Split('|');
-                cmd = c[0];
-                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                switch (cmd)
-                {
-                    case "0":
-                    case "99":
-                    case "2":
-
-                        RefreshList();
-                        break;
-                    
-                }
-            }
-
-        }
-
         private void OpenTab(string UserName)
         {
             if (!(((System.Windows.Forms.Form)TopLevelControl).MdiChildren).Any(a => a.Text == UserName))
@@ -220,32 +215,69 @@ namespace Atiran.Messenger.Forms.ChatTabs
             {
                 (((System.Windows.Forms.Form)TopLevelControl).MdiChildren).First(f => f.Text == UserName).Focus();
             }
+
         }
 
         #endregion
 
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            switch (keyData)
-            {
-                case Keys.Enter:
-                    {
-                        if (dataGridView1.SelectedRows.Count > 0)
-                        {
-                            OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
-                        }
-                        return true;
-                    }
-            }
+        #region Messenger
 
-            return base.ProcessCmdKey(ref msg, keyData);
+        private async void listenRoutineLocal()
+        {
+            IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal),
+                int.Parse(ServiceServer.serverPortLocal));
+
+            Socket T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            T.Connect(EP);
+
+            EndPoint serverEP = (EndPoint)T.RemoteEndPoint;
+            byte[] buffer = new byte[4096];
+            int inLength = 0;
+            string msg;
+            string cmd;
+            while (true)
+            {
+                try
+                {
+                    await Task.Run(() => inLength = T.ReceiveFrom(buffer, ref serverEP));
+                }
+
+                catch (Exception)
+                {
+                    //th.Abort();
+                    //continue;
+                    break;
+                }
+
+                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                string[] c = msg.Split('|');
+                cmd = c[0];
+                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+                switch (cmd)
+                {
+                    case "0":
+                    case "99":
+                    case "2":
+                        RefreshList();
+                        break;
+
+                }
+            }
         }
 
+        #endregion
 
-
-        private void dataGridView1_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void ContactTab_FormClosed(object sender, FormClosedEventArgs e)
         {
-            OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+            try
+            {
+                //th.Abort();
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }

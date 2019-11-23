@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Atiran.DataLayer.Context;
 using Atiran.DataLayer.Services;
@@ -25,23 +26,6 @@ namespace Atiran.MenuBar.Panels
 {
     public class MainButton : UserControl
     {
-        #region Private Messenger
-
-        private Thread th;
-        private int loginState = 0;
-
-        private int NumberMessageNotRed = 0;
-
-        #endregion
-
-        public MainButton()
-        {
-            InitializeComponent();
-            this.BackColor = Color.Transparent;
-            timer1.Start();
-
-        }
-
         private Label lblMaximis;
         private Label lblMinimis;
         private Timer timer1;
@@ -69,6 +53,14 @@ namespace Atiran.MenuBar.Panels
         private Label btnMessenger;
         private Label label4;
         private List<Form> deskTabs;
+
+        public MainButton()
+        {
+            InitializeComponent();
+            this.BackColor = Color.Transparent;
+            timer1.Start();
+
+        }
 
         private void InitializeComponent()
         {
@@ -398,15 +390,18 @@ namespace Atiran.MenuBar.Panels
                 lblSalMali.Text = Connection.GetNameSalMali(SalMaliID);
 
                 //messenger
+                //ServiceServer.serverIP = "192.168.1.103";
                 ServiceServer.serverIP = "127.0.0.1";
                 ServiceServer.serverPort = "1372";
-                setLabelMessageNotRed(Connection.GetNumberMessageNotRed(UserID));
-                LoginMessenger();
+                //setLabelMessageNotRed(Connection.GetNumberMessageNotRed(UserID));
+                //LoginMessenger();
                 //-------
 
             }
             msUserActivs.Renderer = new ToolStripProfessionalRendererAtiran();
         }
+
+        #region Event
 
         private void lblClose_MouseDown(object sender, MouseEventArgs e)
         {
@@ -537,44 +532,43 @@ namespace Atiran.MenuBar.Panels
             lblDateTime.Text = String.Format("{0}/{1}/{2}   {3}:{4}:{5}", pc.GetYear(td).ToString("0000"), pc.GetMonth(td).ToString("00"), pc.GetDayOfMonth(td).ToString("00"), td.Hour.ToString("00"), td.Minute.ToString("00"), td.Second.ToString("00"));
         }
 
-        private void btnMessenger_Click(object sender, EventArgs e)
-        {
-            if (loginState == 0)
-            {
-                MessageBox.Show("خطا", "اتصال برقرار نشده لطفا مجدد تلاش كنيد", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                LoginMessenger();
-            }
-            else
-            {
-                th.Abort();
+        #endregion
 
-                MainMessanger messanger = new MainMessanger(miUserActivs.Text);
-                messanger.ShowDialog();
+        #region Messenger
 
-                th.Start();
-            }
-        }
+        #region Private Messenger
 
-        #region moving form by muse in header
-
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd,
-            int Msg, int wParam, int lParam);
-        [DllImportAttribute("user32.dll")]
-        public static extern bool ReleaseCapture();
-
-        private void MainButton_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(((Form)TopLevelControl).Handle, 0x00A1, 0x2, 0);
-            }
-        }
+        private Thread th;
+        private int loginState = 0;
+        private int NumberMessageNotRed = 0;
 
         #endregion
 
-        #region Method Messenger
+        private async void btnMessenger_Click(object sender, EventArgs e)
+        {
+            if (ServiceServer.socketSever == null || !ServiceServer.socketSever.Connected)
+            {
+                btnMessenger.Enabled = false;
+                await Task.Run(() => LoginMessenger());
+                btnMessenger.Enabled = true;
+            }
+            else
+            {
+                //th.Abort();
+
+                ((Form)TopLevelControl).Hide();
+                MainMessanger messanger = new MainMessanger(miUserActivs.Text);
+                messanger.ShowDialog();
+                ((Form)TopLevelControl).Show();
+
+                //th = new Thread(listenRoutine);
+                //listenRoutine();
+                //th.IsBackground = true;
+                ////th.Priority = ThreadPriority.Normal;
+                //th.Start();
+            }
+        }
+
 
         private void setLabelMessageNotRed(int Number)
         {
@@ -591,81 +585,111 @@ namespace Atiran.MenuBar.Panels
             try
             {
                 IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIP), int.Parse(ServiceServer.serverPort));
-                ServiceServer.T = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                ServiceServer.T.Connect(EP);
-                th = new Thread(listenRoutine);
-                th.IsBackground = true;
-                th.Priority = ThreadPriority.Normal;
-                th.Start();
-                sendMessage("0|" + miUserActivs.Text + "|login");
+                ServiceServer.socketSever = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                ServiceServer.socketSever.Connect(EP);
+                //th = new Thread(listenRoutine);
+                //listenRoutine();
+                //th.IsBackground = true;
+                ////th.Priority = ThreadPriority.Normal;
+                //th.Start();
+                sendMessageToServer("0|" + miUserActivs.Text + "|login");
                 loginState = 1;
+                MessageBox.Show("اتصال به سرور پيام رسال با موفقيت انجام شد.");
             }
             catch (Exception)
             {
-                MessageBox.Show("ارتباط با سرور ممکن نیست!");
+                MessageBox.Show("ارتباط با سرور پيام رسان ممکن نیست!");
             }
         }
 
-        private void listenRoutine()
+        //private async void listenRoutine()
+        //{
+        //    EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
+        //    byte[] buffer = new byte[4096];
+        //    int inLength = 0;
+        //    string msg;
+        //    string cmd;
+        //    while (true)
+        //    {
+        //        try
+        //        {
+        //            await Task.Run(()=>inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP));
+        //        }
+
+        //        catch (Exception)
+        //        {
+        //            //ServiceServer.T.Close();
+        //            //listBoxUserList.Items.Clear();
+        //            //richTextBoxBoard.AppendText(time + " اتصال از بین رفته است");
+        //            //MessageBox.Show("اتصال از بین رفته است فرم را بسته و مجدد باز كنيد");
+        //            //loginState = 0;
+        //            //labelStatus.Text = " بدون اتصال ";
+        //            //th.Abort();
+        //            continue;
+        //        }
+
+        //        msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+        //        string[] c = msg.Split('|');
+        //        cmd = c[0];
+        //        //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
+        //        if (cmd == "2")
+        //        {
+        //            //تعداد پيام هاي خانده نشده را اپديت كنه
+        //            setLabelMessageNotRed(NumberMessageNotRed + 1);
+        //        }
+        //        else if (cmd == "64")
+        //        {
+        //            loginState = 0;
+        //            MessageBox.Show("نام کاربری نامعتبر است ، لطفا دوباره وارد شوید!");
+        //            //th.Abort();
+        //        }
+        //    }
+
+        //}
+
+        private void sendMessageToServer(string str)
         {
-            EndPoint serverEP = (EndPoint)ServiceServer.T.RemoteEndPoint;
-            byte[] buffer = new byte[4096];
-            int inLength = 0;
-            string msg;
-            string cmd;
-            while (true)
+            if (ServiceServer.socketSever.Connected)
             {
-                try
-                {
-                    inLength = ServiceServer.T.ReceiveFrom(buffer, ref serverEP);
-                }
-
-                catch (Exception)
-                {
-                    ServiceServer.T.Close();
-                    //listBoxUserList.Items.Clear();
-                    //richTextBoxBoard.AppendText(time + " اتصال از بین رفته است");
-                    loginState = 0;
-                    //labelStatus.Text = " بدون اتصال ";
-                    th.Abort();
-                }
-
-                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                string[] c = msg.Split('|');
-                cmd = c[0];
-                //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                if (cmd == "2")
-                {
-                    //تعداد پيام هاي خانده نشده را اپديت كنه
-                    setLabelMessageNotRed(NumberMessageNotRed + 1);
-                }
-                else if (cmd == "64")
-                {
-                    loginState = 0;
-                    MessageBox.Show("نام کاربری نامعتبر است ، لطفا دوباره وارد شوید!");
-                    th.Abort();
-                }
+                byte[] buffer = Encoding.UTF8.GetBytes(str);
+                ServiceServer.socketSever.Send(buffer, 0, buffer.Length, SocketFlags.None);
             }
-
-        }
-
-        private void sendMessage(string str)
-        {
-            byte[] buffer = Encoding.UTF8.GetBytes(str);
-            ServiceServer.T.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            else
+            {
+                MessageBox.Show("اتصال سوكت برقرار نيست");
+            }
         }
 
         public void QuitMessenger()
         {
             try
             {
-                sendMessage("9|" + miUserActivs.Text + "|quit");
-                ServiceServer.T.Close();
-                th.Abort();
+                sendMessageToServer("9|" + miUserActivs.Text + "|quit");
+                ServiceServer.socketSever.Close();
+                //th.Abort();
             }
             catch (Exception)
             {
+            }
+        }
+
+        #endregion
+
+        #region moving form by muse in header
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd,
+            int Msg, int wParam, int lParam);
+        [DllImportAttribute("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        private void MainButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(((Form)TopLevelControl).Handle, 0x00A1, 0x2, 0);
             }
         }
 
