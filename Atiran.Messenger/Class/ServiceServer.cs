@@ -20,9 +20,12 @@ namespace Atiran.Messenger.Class
         {
             get => "127.0.0.1";
         }
+
+        private static string _port;
         public static string serverPortLocal
         {
-            get => "2006";
+            get => _port;
+            set => _port = value;
         }
 
 

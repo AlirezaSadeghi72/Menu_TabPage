@@ -194,17 +194,17 @@ namespace Atiran.Messenger.Forms
 
         #region Method
 
-        private void OpenTab(string UserName)
+        private void OpenTab(string UserNameTo)
         {
-            if (!MdiChildren.Any(a => a.Text == UserName))
+            if (!MdiChildren.Any(a => a.Text == UserNameTo))
             {
                 var ChatTab = new ChatHistory(_userName);
-                ChatTab.Text = UserName;
+                ChatTab.Text = UserNameTo;
                 ChatTab.Show(dockPanel1);
             }
             else
             {
-                MdiChildren.First(f => f.Text == UserName).Focus();
+                MdiChildren.First(f => f.Text == UserNameTo).Focus();
             }
         }
 
@@ -221,23 +221,37 @@ namespace Atiran.Messenger.Forms
         Socket clientFormSocket;
         //Thread serverLocalTh;
         Thread clientFormTh;
-        Hashtable HT = new Hashtable();
+        static Hashtable HT = new Hashtable();
         //string serverIP = ServiceServer.serverIPLocal;
         //private string serverPort = ServiceServer.serverPortLocal;
 
         private async void StartServerRoutineLocal()
         {
+            ServiceServer.serverPortLocal = (new Random()).Next(1993, 7293).ToString();
+
             IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
             serverLocal = new TcpListener(EP);
             serverLocal.Start(100);
-            while (true)
-            {
-                clientFormSocket = await Task.Run(() => serverLocal.AcceptSocket());
-                clientFormTh = new Thread(clientRoutine);
-                clientFormTh.IsBackground = true;
-                //clientTh.Priority = ThreadPriority.Normal;
-                clientFormTh.Start();
-            }
+
+            await Task.Run(() =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            clientFormSocket = serverLocal.AcceptSocket();
+                            clientFormTh = new Thread(clientRoutine);
+                            clientFormTh.IsBackground = true;
+                            clientFormTh.Priority = ThreadPriority.Normal;
+                            clientFormTh.Start();
+                        }
+                        catch (Exception)
+                        {
+                            break;
+                        }
+                    }
+
+                });
         }
 
         private void clientRoutine()
@@ -268,7 +282,7 @@ namespace Atiran.Messenger.Forms
                                         //add Socket Form To List Socket in Servr Local
                                         HT.Add(socketname, sck);
                                         ListServerLocal.DropDown.Items.Add(socketname);
-                                        //sendMessageToServer("7|" + _userName + "|red|" + socketname);
+                                        sendMessageToServer("1|" + _userName +"|Get List Online");
 
                                     }
 
@@ -304,6 +318,11 @@ namespace Atiran.Messenger.Forms
                                         if (ali != null)
                                             ListServerLocal.DropDown.Items.Remove(ali);
                                     }
+                                    break;
+                                }
+                            default:
+                                {
+                                    sendMessageToServer(msg);
                                     break;
                                 }
                         }
@@ -364,27 +383,27 @@ namespace Atiran.Messenger.Forms
             byte[] buffer = new byte[4096];
             int inLength = 0;
             string msg;
-            while (true)
+
+            await Task.Run(() =>
             {
-                await Task.Run(() =>
+                while (true)
                 {
                     try
                     {
+
                         inLength = ServiceServer.socketSever.ReceiveFrom(buffer, ref serverEP);
-                    }
+                        msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+                        sendToAllForms(msg);
 
-                    catch (Exception e)
+                    }
+                    catch (Exception)
                     {
-                        var ali = e.Message;
-                        //th.Abort();
-                        //break;
-                        //continue;
+                        break;
                     }
-                });
+                }
+            });
 
-                msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-                sendToAllForms(msg);
-            }
+
         }
 
         private void sendMessageToServer(string str)
@@ -412,6 +431,7 @@ namespace Atiran.Messenger.Forms
                 clientFormSocket.Close();
                 clientFormSocket.Dispose();
                 clientFormTh.Abort();
+                serverLocal.Stop();
             }
             catch (Exception)
             {

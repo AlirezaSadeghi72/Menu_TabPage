@@ -23,7 +23,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         private string _userName;
         private DockPanel _dockPanel;
-        private List<Users> AllUsers;
+        //private List<Users> AllUsers;
         private System.Windows.Forms.TextBox txtSearch;
         private DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridView dataGridView1;
@@ -52,6 +52,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.txtSearch.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.txtSearch.Size = new System.Drawing.Size(284, 28);
             this.txtSearch.TabIndex = 0;
+            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
             // 
             // dataGridView1
             // 
@@ -91,8 +92,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.ShowHint = Atiran.Utility.Docking2.DockState.DockLeft;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ContactTab_FormClosed);
             this.Load += new System.EventHandler(this.Contact_Load);
-            this.Enter += new System.EventHandler(this.Contact_Enter);
-            this.Validated += new System.EventHandler(this.Contact_Validated);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -103,49 +102,21 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             dataGridView1.DataSource = _historyUser;
             SetGrid();
-            AllUsers = Connection.AllUser;
+            //AllUsers = Connection.AllUser;
             //دريافت پيام از سرور فعال ميشود
             listenRoutineLocal();
             //--------
-
             sendMessageToServerLocal("login|" + Text);
 
         }
 
         #region Event
 
-        private void RefreshList()
-        {
-            _historyUser = Connection.GetHistoryContacts(_userName);
-            dataGridView1.DataSource = _historyUser;
-            SetGrid();
-        }
+        
 
-        private void Contact_Validated(object sender, EventArgs e)
+        private void txtSearch_TextChanged(object sender, EventArgs e)
         {
-            if (IsHidden)
-            {
-                try
-                {
-                    //غير فعال كردن دريافت  پيام از سرور براي اين فرم
-                    //th.Abort();
-                    //timer1.Stop();
-                }
-                catch (Exception)
-                {
-
-                }
-            }
-        }
-
-        private void Contact_Enter(object sender, EventArgs e)
-        {
-            // فعال كردن دريافت  پيام از سرور براي اين فرم
-            //th = new Thread(listenRoutine);
-            //th.IsBackground = true;
-            ////th.Priority = ThreadPriority.Normal;
-            //th.Start();
-            //timer1.Start();
+            dataGridView1.DataSource = _historyUser.Where(w => w.UserName == txtSearch.Text.Trim()).ToList();
         }
 
         private void dataGridView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -218,19 +189,25 @@ namespace Atiran.Messenger.Forms.ChatTabs
             //dataGridView1.Columns["situation"].HeaderText = "وضعيت انلايني كاربر";
         }
 
-        private void OpenTab(string UserName)
+        private void OpenTab(string UserNameTo)
         {
-            if (!(((System.Windows.Forms.Form)TopLevelControl).MdiChildren).Any(a => a.Text == UserName))
+            if (!(((System.Windows.Forms.Form)TopLevelControl).MdiChildren).Any(a => a.Text == UserNameTo))
             {
                 var ChatTab = new ChatHistory(_userName);
-                ChatTab.Text = UserName;
+                ChatTab.Text = UserNameTo;
                 ChatTab.Show(_dockPanel);
             }
             else
             {
-                (((System.Windows.Forms.Form)TopLevelControl).MdiChildren).First(f => f.Text == UserName).Focus();
+                (((System.Windows.Forms.Form)TopLevelControl).MdiChildren).First(f => f.Text == UserNameTo).Focus();
             }
+        }
 
+        private void RefreshList()
+        {
+            _historyUser = Connection.GetHistoryContacts(_userName);
+            dataGridView1.DataSource = _historyUser;
+            SetGrid();
         }
 
         #endregion
@@ -252,47 +229,36 @@ namespace Atiran.Messenger.Forms.ChatTabs
             string msg;
             string cmd;
 
-            try
+            await Task.Run(() =>
             {
                 while (true)
                 {
-                    await Task.Run(() =>
+                    try
                     {
-                        try
+                        inLength = T.ReceiveFrom(buffer, ref serverEP);
+
+                        msg = Encoding.UTF8.GetString(buffer, 0, inLength);
+
+                        string[] c = msg.Split('|');
+                        cmd = c[0];
+
+                        switch (cmd)
                         {
-                            inLength = T.ReceiveFrom(buffer, ref serverEP);
+                            case "0":
+                            case "1":
+                            case "2":
+                                RefreshList();
+                                break;
                         }
-
-                        catch (Exception e)
-                        {
-                            var ali = e.Message;
-                            //th.Abort();
-                            //continue;
-                            //break;
-                        }
-                    });
-
-                    msg = Encoding.UTF8.GetString(buffer, 0, inLength);
-
-                    string[] c = msg.Split('|');
-                    cmd = c[0];
-                    //MessageBox.Show("CLIENT   Cmd:" + cmd + " Who:" + who+ " Str:" + str);
-                    switch (cmd)
+                    }
+                    catch (Exception)
                     {
-                        case "0":
-                        case "99":
-                        case "2":
-                            RefreshList();
-                            break;
-
+                        T.Close();
+                        MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
+                        break;
                     }
                 }
-            }
-            catch (Exception)
-            {
-                T.Close();
-                MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
-            }
+            });
 
         }
 
@@ -309,8 +275,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
             }
         }
 
-        #endregion
 
+        #endregion
 
     }
 }
