@@ -194,17 +194,17 @@ namespace Atiran.Messenger.Forms
 
         #region Method
 
-        private void OpenTab(string UserName)
+        private void OpenTab(string UserNameTo)
         {
-            if (!MdiChildren.Any(a => a.Text == UserName))
+            if (!MdiChildren.Any(a => a.Text == UserNameTo))
             {
                 var ChatTab = new ChatHistory(_userName);
-                ChatTab.Text = UserName;
+                ChatTab.Text = UserNameTo;
                 ChatTab.Show(dockPanel1);
             }
             else
             {
-                MdiChildren.First(f => f.Text == UserName).Focus();
+                MdiChildren.First(f => f.Text == UserNameTo).Focus();
             }
         }
 
@@ -227,6 +227,8 @@ namespace Atiran.Messenger.Forms
 
         private async void StartServerRoutineLocal()
         {
+            ServiceServer.serverPortLocal = (new Random()).Next(1993, 7293).ToString();
+
             IPEndPoint EP = new IPEndPoint(IPAddress.Parse(ServiceServer.serverIPLocal), int.Parse(ServiceServer.serverPortLocal));
             serverLocal = new TcpListener(EP);
             serverLocal.Start(100);
@@ -280,7 +282,7 @@ namespace Atiran.Messenger.Forms
                                         //add Socket Form To List Socket in Servr Local
                                         HT.Add(socketname, sck);
                                         ListServerLocal.DropDown.Items.Add(socketname);
-                                        //sendMessageToServer("7|" + _userName + "|red|" + socketname);
+                                        sendMessageToServer("1|" + _userName +"|Get List Online");
 
                                     }
 
@@ -316,6 +318,11 @@ namespace Atiran.Messenger.Forms
                                         if (ali != null)
                                             ListServerLocal.DropDown.Items.Remove(ali);
                                     }
+                                    break;
+                                }
+                            default:
+                                {
+                                    sendMessageToServer(msg);
                                     break;
                                 }
                         }

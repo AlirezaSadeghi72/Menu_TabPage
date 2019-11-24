@@ -78,6 +78,7 @@ namespace Atiran.Messenger.Server
             this.textBox1.Location = new System.Drawing.Point(60, 129);
             this.textBox1.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(76, 20);
             this.textBox1.TabIndex = 3;
             this.textBox1.Text = "1372";
@@ -292,31 +293,40 @@ namespace Atiran.Messenger.Server
                                     connection.SituationUser(who, true);
                                     //ليست افراد آنلاين رو براي همه ميفرسته
                                     sendToAll(cmd + "|server|" + getOnlineList());
-                                    connection.RefreshUsers();
 
+                                    break;
+                                }
+                            case "1":
+                                {
+                                    sendToClient(cmd + "|server|" + getOnlineList(), who,"");
                                     break;
                                 }
                             case "2": // for private message
                                 {
                                     string to = c[3];
 
+                                    List<Users> AllUser = connection.AllUsers;
                                     //ثبت در ديتابيس
                                     var Message = new Message_Temp()
                                     {
                                         Text = c[2].Trim(),
-                                        FromTocen = connection.AllUsers.FirstOrDefault(f => f.UserName == who).UserID,
-                                        ToTocen = connection.AllUsers.FirstOrDefault(f => f.UserName == to).UserID,
+                                        FromTocen = AllUser.FirstOrDefault(f => f.UserName == who).UserID,
+                                        ToTocen = AllUser.FirstOrDefault(f => f.UserName == to).UserID,
                                         DateTimeSend = dateTime,
                                         MessageDeleteFrom = false,
                                         MessageDeleteTo = false,
-                                        MessageID = connection.AllUsers.First(f => f.UserName == who).NextMessageID ?? 1
+                                        MessageID = AllUser.First(f => f.UserName == who).NextMessageID ?? 1
                                     };
 
-                                    if ((Socket)HT[to] == null)
-                                        connection.SendMessage_temp(Message);
-                                    else
-                                        connection.SendMessage(Message);
+                                    //if ((Socket)HT[to] == null)
+                                    connection.SendMessage_temp(Message);
+                                    //else
+                                    //    connection.SendMessage(Message);
 
+                                    int? fromID = AllUser.FirstOrDefault(f => f.UserName == who)?.UserID;
+                                    int? ToID = AllUser.FirstOrDefault(f => f.UserName == to)?.UserID;
+
+                                    connection.RedMessage(fromID ?? -1, ToID ?? -1);
 
                                     //پيام خصوصي براي كاربر 
                                     //(to)
@@ -327,26 +337,28 @@ namespace Atiran.Messenger.Server
                                 }
                             case "7":
                                 {
-                                    int fromID = Convert.ToInt32(who);
-                                    int ToID = Convert.ToInt32(c[3]);
+                                    List<Users> AllUser = connection.AllUsers;
 
-                                    connection.RedMessage(fromID, ToID);
-                                    sendToAll("0" + "|server|" + getOnlineList());
+                                    int? fromID = AllUser.FirstOrDefault(f=>f.UserName == who)?.UserID;
+                                    int? ToID = AllUser.FirstOrDefault(f => f.UserName == c[3])?.UserID;
+
+                                    connection.RedMessage(fromID??-1, ToID??-1);
+                                    sendToClient("1" + "|server|" + getOnlineList(), who, "");
 
                                     break;
                                 }
                             case "9":
                                 {
                                     connection.SituationUser(who, false, dateTime);
-                                    connection.RefreshUsers();
                                     break;
                                 }
                         }
                     }
                 }
 
-                catch (Exception)
+                catch (Exception e)
                 {
+                    var ali = e.Message;
                     lock (receivelocker)
                     {
                         lock (listlocker)
@@ -354,14 +366,13 @@ namespace Atiran.Messenger.Server
                             HT.Remove(socketname);
                             listBoxUser.Items.Remove(socketname);
 
-                            connection.SituationUser(socketname, false);
+                            DateTime dt = DateTime.Now;
+                            string dateTime = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") +
+                                              "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.ToString("HH:mm:ss");
+                            connection.SituationUser(socketname, false, dateTime);
                         }
-                        Console.WriteLine(socketname + "has lost");
-                        Thread.Sleep(500);
-                        //براي همه پيام خروج كاربر
-                        //soketname
-                        //راميفرسته
-                        //sendToAll("99" + "|server|" + socketname + " has lost connection");
+
+                        Thread.Sleep(100);
 
                         //ليست افراد آنلاين رو براي همه ميفرسته
                         sendToAll(0 + "|server|" + getOnlineList());

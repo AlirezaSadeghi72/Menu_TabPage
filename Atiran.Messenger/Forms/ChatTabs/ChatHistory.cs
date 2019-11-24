@@ -132,7 +132,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             // 
             // txtSearch
             // 
-            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSearch.Location = new System.Drawing.Point(109, 3);
             this.txtSearch.Multiline = true;
@@ -162,6 +162,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.ContextMenuStrip = this.contextMenuStrip1;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.MultiSelect = false;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -171,6 +172,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.Size = new System.Drawing.Size(634, 596);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.TabStop = false;
+            this.dataGridView1.DataSourceChanged += new System.EventHandler(this.dataGridView1_DataSourceChanged);
             this.dataGridView1.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dataGridView1_DataBindingComplete);
             // 
             // contextMenuStrip1
@@ -285,7 +287,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
             _historyMessagese = (ali.Count > 0) ? ali : new List<Messages>();
             dataGridView1.DataSource = _historyMessagese;
             SetGrid();
-            dataGridView1.Columns[dataGridView1.ColumnCount - 1].Selected = true;
+            //dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 1;
+            //dataGridView1.CurrentCell = dataGridView1.Rows[dataGridView1.RowCount - 1].Cells["Text"];
 
             if (!(Connection.AllUser.First(f => f.UserName == Text).avtive ?? true))
             {
@@ -307,6 +310,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
                 //model : 7|to|red|From
 
                 sendMessageToServerLocal("login|" + Text);
+                Thread.Sleep(200);
+                sendMessageToServerLocal("7|" + _userNameFrom + "|red|" + _userNameTo);
 
             }
             //--------
@@ -317,7 +322,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private void btnSend_Click(object sender, EventArgs e)
         {
             if (txtMessage.Text.Trim() != "")
-                Send();
+                sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
         }
 
         private void tsmiEditMessage_Click(object sender, EventArgs e)
@@ -341,6 +346,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
                     //row.DefaultCellStyle.Alignment = DataGridViewContentAlignment.TopRight;
                 }
             }
+
+            
         }
 
         private void btnSend_MouseEnter(object sender, EventArgs e)
@@ -360,18 +367,11 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
-            if (txtSearch.Text.Trim() != "")
+            dataGridView1.DataSource = _historyMessagese.Where(w => w.Text.Contains(txtSearch.Text)).ToList();
+
+            if (dataGridView1.Rows.Count > 0)
             {
-                dataGridView1.DataSource = _historyMessagese.Where(w => w.Text.Contains(txtSearch.Text)).ToList();
-                if (dataGridView1.Rows.Count > 0)
-                {
-                    dataGridView1.Rows[dataGridView1.Rows.Count - 1].Selected = true;
-                }
-            }
-            else if (txtMessage.Text == "")
-            {
-                dataGridView1.DataSource = _historyMessagese.ToList();
-                dataGridView1.Columns[dataGridView1.ColumnCount - 1].Selected = true;
+               dataGridView1.CurrentCell =  dataGridView1.Rows[dataGridView1.RowCount - 1].Cells["Text"];
             }
 
         }
@@ -397,7 +397,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             if ((Keys.Enter | Keys.Control) == keyData && txtMessage.Focused)
             {
                 if (txtMessage.Text.Trim() != "")
-                    Send();
+                    sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -426,50 +426,59 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         }
 
-        private void Send()
-        {
-            //var dt = DateTime.Now;
-            //var Message = new Message_Temp()
-            //{
-            //    Text = txtMessage.Text.Trim(),
-            //    FromTocen = _userIdFrom,
-            //    ToTocen = _userIdTo,
-            //    DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") + "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
-            //    MessageDeleteFrom = false,
-            //    MessageDeleteTo = false,
-            //    MessageID = Connection.AllUser.First(f => f.UserID == _userIdFrom).NextMessageID ?? 1
-            //};
-            //if (Connection.SendMessage(Message))
-            //{
-            //    txtMessage.Text = "";
-            //    var MessageSend = new Messages()
-            //    {
-            //        Text = Message.Text,
-            //        FromTocen = Message.FromTocen,
-            //        ToTocen = Message.ToTocen,
-            //        MessageDeleteTo = Message.MessageDeleteTo,
-            //        MessageID = Message.MessageID,
-            //        MessageDeleteFrom = Message.MessageDeleteFrom,
-            //        DateTimeSend = Message.DateTimeSend
-            //    };
-            //    _historyMessagese.Add(MessageSend);
-            //    dataGridView1.DataSource = _historyMessagese.ToList();
-            //    SetGrid();
-            //}
-            //else
-            //{
-            //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
-            //        MessageBoxIcon.Error);
-            //}
-            sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+        //private void Send()
+        //{
+        //    //var dt = DateTime.Now;
+        //    //var Message = new Message_Temp()
+        //    //{
+        //    //    Text = txtMessage.Text.Trim(),
+        //    //    FromTocen = _userIdFrom,
+        //    //    ToTocen = _userIdTo,
+        //    //    DateTimeSend = _pc.GetYear(dt).ToString("0000") + "/" + _pc.GetMonth(dt).ToString("00") + "/" + _pc.GetDayOfMonth(dt).ToString("00") + " " + dt.Hour.ToString("00") + ":" + dt.Minute.ToString("00") + ":" + dt.Second.ToString("00"),
+        //    //    MessageDeleteFrom = false,
+        //    //    MessageDeleteTo = false,
+        //    //    MessageID = Connection.AllUser.First(f => f.UserID == _userIdFrom).NextMessageID ?? 1
+        //    //};
+        //    //if (Connection.SendMessage(Message))
+        //    //{
+        //    //    txtMessage.Text = "";
+        //    //    var MessageSend = new Messages()
+        //    //    {
+        //    //        Text = Message.Text,
+        //    //        FromTocen = Message.FromTocen,
+        //    //        ToTocen = Message.ToTocen,
+        //    //        MessageDeleteTo = Message.MessageDeleteTo,
+        //    //        MessageID = Message.MessageID,
+        //    //        MessageDeleteFrom = Message.MessageDeleteFrom,
+        //    //        DateTimeSend = Message.DateTimeSend
+        //    //    };
+        //    //    _historyMessagese.Add(MessageSend);
+        //    //    dataGridView1.DataSource = _historyMessagese.ToList();
+        //    //    SetGrid();
+        //    //}
+        //    //else
+        //    //{
+        //    //    MessageBox.Show("خطا", "مشكل در ارتباط وجود دارد لطفا مجددا تلاش كنيد", MessageBoxButtons.OK,
+        //    //        MessageBoxIcon.Error);
+        //    //}
+        //    sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
 
-        }
+        //}
 
         #endregion
 
         #region Messenger Link To Server Local
 
         private Socket T;
+
+        private void dataGridView1_DataSourceChanged(object sender, EventArgs e)
+        {
+            if (dataGridView1.RowCount > 0)
+            {
+                dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.RowCount - 1;
+                dataGridView1.CurrentCell = dataGridView1.Rows[dataGridView1.RowCount - 1].Cells["Text"];
+            }
+        }
 
         private async void listenRoutineLocal()
         {
@@ -505,7 +514,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                             switch (cmd)
                             {
                                 case "0":
-                                case "99":
+                                case "1":
                                     {
                                         string[] M = str.Split(',');
                                         if (M.Any(a => a == _userNameTo))
@@ -544,14 +553,14 @@ namespace Atiran.Messenger.Forms.ChatTabs
                                             dataGridView1.DataSource = _historyMessagese.ToList();
                                             //flashWindow();
                                             txtMessage.Text = "";
-                                            dataGridView1.Columns[dataGridView1.ColumnCount - 1].Selected = true;
+                                            //dataGridView1.Rows[dataGridView1.RowCount - 1].Selected = true;
                                         }
                                         else if (toId == _userIdFrom && fromId == _userIdTo)
                                         {
 
                                             _historyMessagese.Add(MessageSend);
                                             dataGridView1.DataSource = _historyMessagese.ToList();
-                                            dataGridView1.Columns[dataGridView1.ColumnCount - 1].Selected = true;
+                                            //dataGridView1.Rows[dataGridView1.RowCount - 1].Selected = true;
                                             //flashWindow();
 
                                         }
@@ -561,7 +570,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
                             }
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
                             T.Close();
                             MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");

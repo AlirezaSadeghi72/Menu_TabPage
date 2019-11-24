@@ -9,21 +9,19 @@ namespace Atiran.Messenger.Server.DataLayer.Context
 {
     public static class connection
     {
-        private static List<Users> _allUsers;
-
-        public static void RefreshUsers()
-        {
-            using (var ctx = new DBMessengerEntities())
-            {
-                _allUsers = ctx.Users.AsNoTracking().ToList();
-            }
-        }
+        
         public static List<Users> AllUsers
         {
-            get => _allUsers;
+            get
+            {
+                using (var ctx = new DBMessengerEntities())
+                {
+                    return ctx.Users.AsNoTracking().ToList();
+                }
+            }
         }
 
-        public static void SituationUser(string UserNsme, bool situation,string DateTime = null)
+        public static void SituationUser(string UserNsme, bool situation, string DateTime = null)
         {
             using (var ctx = new DBMessengerEntities())
             {
@@ -76,9 +74,19 @@ namespace Atiran.Messenger.Server.DataLayer.Context
             using (var ctx = new DBMessengerEntities())
             {
                 //باگ داره ازديتابيس پاك نميكنه اطلاعات مورد نظر
-                var result = ctx.MessageNotRed.AsNoTracking()
-                    .Where(w => w.FromTocen == UserIdFrom && w.ToTocen == UserIdTo).ToList();
-                result.Clear();
+                //var result = ctx.MessageNotRed.AsNoTracking()
+                //    .Where(w => w.FromTocen == UserIdFrom && w.ToTocen == UserIdTo).ToList();
+                ////var ali = (from messageNotRed in ctx.MessageNotRed
+                ////    where messageNotRed.FromTocen == UserIdFrom && messageNotRed.ToTocen == UserIdTo
+                ////    select messageNotRed).ToList();
+                //ctx.MessageNotRed.RemoveRange(result);
+
+                var ListOfData = (from a in ctx.MessageNotRed
+                        where a.FromTocen == UserIdFrom && a.ToTocen == UserIdTo
+                        select a)
+                    .ToList();
+
+                ctx.MessageNotRed.RemoveRange(ListOfData);
                 ctx.SaveChanges();
 
             }
