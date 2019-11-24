@@ -72,7 +72,7 @@ namespace Atiran.MenuBar.Forms
         private List<SubSystem> subSystems = new List<SubSystem>();
         private DockPanel MainTab;
         private MenuStrip MyMnSt;
-        private int _userID = 1;
+        private int _userID = 1005;
         private Utility.Docking2.Theme.ThemeVS2012.VS2012LightTheme vS2012LightTheme1;
         private int _salMaliID = 1;
         private bool isCLoseAll = false;

@@ -361,7 +361,7 @@ namespace Atiran.MenuBar.Panels
 
         }
 
-        private void MainButton_Load(object sender, EventArgs e)
+        private async void MainButton_Load(object sender, EventArgs e)
         {
             if (!this.DesignMode)
             {
@@ -394,7 +394,9 @@ namespace Atiran.MenuBar.Panels
                 ServiceServer.serverIP = "127.0.0.1";
                 ServiceServer.serverPort = "1372";
                 //setLabelMessageNotRed(Connection.GetNumberMessageNotRed(UserID));
-                //LoginMessenger();
+                btnMessenger.Enabled = false;
+                await Task.Run(() => LoginMessenger());
+                btnMessenger.Enabled = true;
                 //-------
 
             }

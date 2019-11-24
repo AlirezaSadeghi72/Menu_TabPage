@@ -25,7 +25,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private DockPanel _dockPanel;
         //private List<Users> AllUsers;
         private System.Windows.Forms.TextBox txtSearch;
-        private DataGridViewTextBoxColumn Column1;
+        //private DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridView dataGridView1;
 
         public ContactTab(DockPanel dockPanel, string UserName)
@@ -40,7 +40,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -50,7 +49,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.txtSearch.Location = new System.Drawing.Point(0, 0);
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.txtSearch.Size = new System.Drawing.Size(284, 28);
+            this.txtSearch.Size = new System.Drawing.Size(275, 28);
             this.txtSearch.TabIndex = 0;
             this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
             // 
@@ -61,8 +60,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.BackgroundColor = System.Drawing.Color.White;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.ColumnHeadersVisible = false;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1});
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.GridColor = System.Drawing.Color.White;
             this.dataGridView1.Location = new System.Drawing.Point(0, 28);
@@ -70,19 +67,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(284, 233);
+            this.dataGridView1.Size = new System.Drawing.Size(275, 449);
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseDoubleClick);
             // 
-            // Column1
-            // 
-            this.Column1.HeaderText = "Column1";
-            this.Column1.Name = "Column1";
-            this.Column1.ReadOnly = true;
-            // 
             // ContactTab
             // 
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(275, 477);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.txtSearch);
             this.DockAreas = ((Atiran.Utility.Docking2.DockAreas)((Atiran.Utility.Docking2.DockAreas.DockLeft | Atiran.Utility.Docking2.DockAreas.DockRight)));
@@ -254,7 +245,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                     catch (Exception)
                     {
                         T.Close();
-                        MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
+                        //MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
                         break;
                     }
                 }
@@ -271,7 +262,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             }
             else
             {
-                MessageBox.Show("اتصال سوكت برقرار نيست");
+                //MessageBox.Show("اتصال سوكت برقرار نيست");
             }
         }
 

@@ -573,7 +573,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                         catch (Exception e)
                         {
                             T.Close();
-                            MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
+                            //MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");
                             break;
                         }
                     }
@@ -589,7 +589,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             }
             else
             {
-                MessageBox.Show("اتصال سوكت برقرار نيست");
+                //MessageBox.Show("اتصال سوكت برقرار نيست");
             }
         }
 

@@ -415,7 +415,7 @@ namespace Atiran.Messenger.Forms
             }
             else
             {
-                MessageBox.Show("اتصال سوكت برقرار نيست");
+                //MessageBox.Show("اتصال سوكت برقرار نيست");
             }
         }
 
