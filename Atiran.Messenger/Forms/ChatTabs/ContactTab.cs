@@ -25,6 +25,10 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private DockPanel _dockPanel;
         //private List<Users> AllUsers;
         private System.Windows.Forms.TextBox txtSearch;
+        private ContextMenuStrip contextMenuStrip1;
+        private System.ComponentModel.IContainer components;
+        private ToolStripMenuItem tsmiDeleteContact;
+
         //private DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridView dataGridView1;
 
@@ -38,9 +42,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tsmiDeleteContact = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtSearch
@@ -58,11 +66,13 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.BackgroundColor = System.Drawing.Color.White;
+            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.ColumnHeadersVisible = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.GridColor = System.Drawing.Color.White;
             this.dataGridView1.Location = new System.Drawing.Point(0, 28);
+            this.dataGridView1.MultiSelect = false;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
@@ -70,6 +80,20 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.dataGridView1.Size = new System.Drawing.Size(275, 449);
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.dataGridView1_MouseDoubleClick);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsmiDeleteContact});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 48);
+            // 
+            // tsmiDeleteContact
+            // 
+            this.tsmiDeleteContact.Name = "tsmiDeleteContact";
+            this.tsmiDeleteContact.Size = new System.Drawing.Size(180, 22);
+            this.tsmiDeleteContact.Text = "حذف مخاطب";
+            this.tsmiDeleteContact.Click += new System.EventHandler(this.tsmiDeleteContact_Click);
             // 
             // ContactTab
             // 
@@ -84,6 +108,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ContactTab_FormClosed);
             this.Load += new System.EventHandler(this.Contact_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -103,8 +128,6 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         #region Event
 
-        
-
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
             dataGridView1.DataSource = _historyUser.Where(w => w.UserName == txtSearch.Text.Trim()).ToList();
@@ -113,6 +136,26 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private void dataGridView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             OpenTab(dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+        }
+
+        private void tsmiDeleteContact_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                var result = MessageBox.Show("آيا مخاطب " +
+                                             dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString() +
+                                             " حذف شود؟", "هشدار", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    sendMessageToServerLocal("4|" + _userName + "|delete|" +
+                                             dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+                }
+                else if (result == DialogResult.No)
+                {
+                    sendMessageToServerLocal("4|" + _userName + "|delete for contact|" +
+                                             dataGridView1.SelectedRows[0].Cells["UserName"].Value.ToString());
+                }
+            }
         }
 
         private void ContactTab_FormClosed(object sender, FormClosedEventArgs e)
@@ -230,17 +273,8 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
                         msg = Encoding.UTF8.GetString(buffer, 0, inLength);
 
-                        string[] c = msg.Split('|');
-                        cmd = c[0];
+                        RefreshList();
 
-                        switch (cmd)
-                        {
-                            case "0":
-                            case "1":
-                            case "2":
-                                RefreshList();
-                                break;
-                        }
                     }
                     catch (Exception)
                     {

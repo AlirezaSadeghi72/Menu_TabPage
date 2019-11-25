@@ -298,7 +298,7 @@ namespace Atiran.Messenger.Server
                                 }
                             case "1":
                                 {
-                                    sendToClient(cmd + "|server|" + getOnlineList(), who,"");
+                                    sendToClient(cmd + "|server|" + getOnlineList(), who, "");
                                     break;
                                 }
                             case "2": // for private message
@@ -335,14 +335,60 @@ namespace Atiran.Messenger.Server
                                                  + dateTime + "|" + Message.MessageID, who, to);
                                     break;
                                 }
+                            case "4":
+                                {
+                                    string to = c[3];
+
+                                    List<Users> AllUser = connection.AllUsers;
+
+                                    int? fromID = AllUser.FirstOrDefault(f => f.UserName == who)?.UserID;
+                                    int? ToID = AllUser.FirstOrDefault(f => f.UserName == to)?.UserID;
+
+                                    if (str == "delete")
+                                    {
+                                        connection.DeleteCuntact(fromID ?? -1, ToID ?? -1, false);
+                                        sendToClient("4|" + who + "|" + str + "|" + to, who, "");
+                                    }
+                                    else if (str == "delete for contact")
+                                    {
+                                        connection.DeleteCuntact(fromID ?? -1, ToID ?? -1, true);
+                                        sendToClient("4|" + who + "|" + str + "|" + to, who, to);
+                                    }
+                                    else if (str == "delete message")
+                                    {
+                                        connection.DeleteMessage(fromID ?? -1, ToID ?? -1, Convert.ToInt64(c[4]), false);
+                                        sendToClient("41|" + who + "|" + str + "|" + to + "|" + c[4], who, "");
+                                    }
+                                    else if (str == "delete message for contact")
+                                    {
+                                        connection.DeleteMessage(fromID ?? -1, ToID ?? -1, Convert.ToInt64(c[4]), true);
+                                        sendToClient("41|" + who + "|" + str + "|" + to + "|" + c[4], who, to);
+                                    }
+
+
+                                    break;
+                                }
+                            case "5":
+                                {
+                                    int from = Convert.ToInt32(c[1]);
+                                    int to = Convert.ToInt32(c[3]);
+                                    Int64 messageID = Convert.ToInt64(c[4]);
+                                    who = connection.AllUsers.FirstOrDefault(f => f.UserID == from).UserName;
+                                    string UserNameTo = connection.AllUsers.FirstOrDefault(f => f.UserID == to).UserName;
+
+
+                                    connection.EditeMessage(from, to, str, messageID);
+                                    sendToClient("5|" + from + "|" + str + "|" + to + "|" + messageID, who, UserNameTo);
+                                    break;
+                                }
                             case "7":
                                 {
                                     List<Users> AllUser = connection.AllUsers;
 
-                                    int? fromID = AllUser.FirstOrDefault(f=>f.UserName == who)?.UserID;
+                                    int? fromID = AllUser.FirstOrDefault(f => f.UserName == who)?.UserID;
                                     int? ToID = AllUser.FirstOrDefault(f => f.UserName == c[3])?.UserID;
 
-                                    connection.RedMessage(fromID??-1, ToID??-1);
+                                    connection.RedMessage(fromID ?? -1, ToID ?? -1);
                                     sendToClient("1" + "|server|" + getOnlineList(), who, "");
 
                                     break;

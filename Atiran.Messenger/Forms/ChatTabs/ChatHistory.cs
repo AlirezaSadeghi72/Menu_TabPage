@@ -44,6 +44,9 @@ namespace Atiran.Messenger.Forms.ChatTabs
         private PictureBox pictureBox1;
         private static PersianCalendar _pc = new PersianCalendar();
 
+        private bool IsEditeMessage = false;
+        private Messages messag;
+
         public ChatHistory(string UserName)
         {
             InitializeComponent();
@@ -132,7 +135,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
             // 
             // txtSearch
             // 
-            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtSearch.Location = new System.Drawing.Point(109, 3);
             this.txtSearch.Multiline = true;
@@ -321,18 +324,80 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
         private void btnSend_Click(object sender, EventArgs e)
         {
-            if (txtMessage.Text.Trim() != "")
-                sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+            if (!IsEditeMessage)
+            {
+                if (txtMessage.Text.Trim() != "")
+                    sendMessageToServerLocal("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" +
+                                             _userNameTo);
+            }
+            else
+            {
+                sendMessageToServerLocal("5|" + messag.FromTocen + "|" + txtMessage.Text.Trim() + "|" +
+                                         messag.ToTocen + "|" + messag.MessageID);
+            }
         }
 
         private void tsmiEditMessage_Click(object sender, EventArgs e)
         {
-            //edit
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                if (Convert.ToInt32(dataGridView1.SelectedRows[0].Cells["FromTocen"].Value.ToString()) == _userIdFrom)
+                {
+                    var selectRow = dataGridView1.SelectedRows[0];
+                    messag = new Messages()
+                    {
+                        Text = selectRow.Cells["Text"].Value.ToString(),
+                        FromTocen = Convert.ToInt32(selectRow.Cells["FromTocen"].Value),
+                        MessageID = Convert.ToInt64(selectRow.Cells["MessageID"].Value),
+                        ToTocen = Convert.ToInt32(selectRow.Cells["ToTocen"].Value),
+                        DateTimeSend = selectRow.Cells["ToTocen"].Value.ToString()
+                    };
+                    IsEditeMessage = true;
+                    txtMessage.Text = messag.Text;
+                }
+                else
+                {
+                    MessageBox.Show("امكان ويرايش پيام مخاطب وجود ندارد.", "هشدار", MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
         }
-
         private void tsmiDeleteMessage_Click(object sender, EventArgs e)
         {
-            //Show Form Delete and question Delete from content 
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                string MessageUserNameFrom = (Convert.ToInt32(dataGridView1.SelectedRows[0].Cells["FromTocen"].Value) == _userIdFrom)
+                    ? _userNameFrom
+                    : _userNameTo;
+                string MessageUserNameTo = (Convert.ToInt32(dataGridView1.SelectedRows[0].Cells["ToTocen"].Value) == _userIdFrom)
+                    ? _userNameFrom
+                    : _userNameTo;
+
+                DialogResult result;
+                if (MessageUserNameFrom == _userNameFrom)
+                {//نمايش حذف دوطرفه 
+                    result = MessageBox.Show("آيا پيام حذف شود؟", "هشدار", MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+                }
+                else
+                {//نمايش حذف يك طرفه چون پيام رو مخاطب ارسال كرده
+                    result = MessageBox.Show("آيا پيام حذف شود؟", "هشدار", MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+                }
+
+                if (result == DialogResult.Yes)
+                {
+                    sendMessageToServerLocal("4|" + MessageUserNameFrom +
+                                             "|delete message|" + MessageUserNameTo + "|" +
+                                             dataGridView1.SelectedRows[0].Cells["MessageID"].Value.ToString());
+                }
+                else if (result == DialogResult.No)
+                {
+                    sendMessageToServerLocal("4|" + MessageUserNameFrom +
+                                             "|delete message for contact|" + MessageUserNameTo + "|" +
+                                             dataGridView1.SelectedRows[0].Cells["MessageID"].Value.ToString());
+                }
+            }
         }
 
         private void dataGridView1_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
@@ -347,7 +412,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
                 }
             }
 
-            
+
         }
 
         private void btnSend_MouseEnter(object sender, EventArgs e)
@@ -371,7 +436,7 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
             if (dataGridView1.Rows.Count > 0)
             {
-               dataGridView1.CurrentCell =  dataGridView1.Rows[dataGridView1.RowCount - 1].Cells["Text"];
+                dataGridView1.CurrentCell = dataGridView1.Rows[dataGridView1.RowCount - 1].Cells["Text"];
             }
 
         }
@@ -396,8 +461,25 @@ namespace Atiran.Messenger.Forms.ChatTabs
         {
             if ((Keys.Enter | Keys.Control) == keyData && txtMessage.Focused)
             {
-                if (txtMessage.Text.Trim() != "")
-                    sendMessageToServerLocal("send|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" + _userNameTo);
+                if (!IsEditeMessage)
+                {
+                    if (txtMessage.Text.Trim() != "")
+                        sendMessageToServerLocal("2|" + _userNameFrom + "|" + txtMessage.Text.Trim() + "|" +
+                                                 _userNameTo);
+                }
+                else
+                {
+                    sendMessageToServerLocal("5|" + messag.FromTocen + "|" + txtMessage.Text.Trim() + "|" +
+                                             messag.ToTocen + "|" + messag.MessageID);
+                }
+                return true;
+            }
+
+            if (keyData == Keys.Escape && IsEditeMessage)
+            {
+                IsEditeMessage = false;
+                txtMessage.Text = "";
+                dataGridView1.Enabled = true;
                 return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -567,10 +649,44 @@ namespace Atiran.Messenger.Forms.ChatTabs
 
                                         break;
                                     }
+                                case "41":
+                                    {
+                                        int fromId = Connection.AllUser.FirstOrDefault(f => f.UserName == who).UserID;
+                                        int toId = Connection.AllUser.FirstOrDefault(f => f.UserName == c[3]).UserID;
+                                        Int64 messageID = Convert.ToInt64(c[4]);
+
+                                        var res = _historyMessagese.FirstOrDefault(f =>
+                                                f.FromTocen == fromId && f.ToTocen == toId && f.MessageID == messageID);
+                                        if (res != null)
+                                        {
+                                            _historyMessagese.Remove(res);
+                                            dataGridView1.DataSource = _historyMessagese.ToList();
+                                        }
+
+                                        break;
+                                    }
+                                case "5":
+                                    {
+                                        int from = Convert.ToInt32(c[1]);
+                                        int to = Convert.ToInt32(c[3]);
+                                        Int64 messageID = Convert.ToInt64(c[4]);
+                                        _historyMessagese.FirstOrDefault(f =>
+                                            f.FromTocen == from && f.ToTocen == to && f.MessageID == messageID).Text = str;
+                                        dataGridView1.DataSource = _historyMessagese;
+                                        if (IsEditeMessage && from == _userIdFrom)
+                                        {
+                                            IsEditeMessage = false;
+                                            msg = null;
+                                            dataGridView1.Enabled = true;
+                                            txtMessage.Text = "";
+                                        }
+
+                                        break;
+                                    }
 
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             T.Close();
                             //MessageBox.Show("ارتباط با سرور لوكال پيام رسان ممکن نیست!");

@@ -540,7 +540,7 @@ namespace Atiran.MenuBar.Panels
 
         #region Private Messenger
 
-        private Thread th;
+        //private Thread th;
         private int loginState = 0;
         private int NumberMessageNotRed = 0;
 

@@ -288,26 +288,6 @@ namespace Atiran.Messenger.Forms
 
                                     break;
                                 }
-                            case "send":
-                                {
-
-                                    lock (sendlocker)
-                                    {
-                                        string[] msg1 = c;
-                                        c[0] = "2";
-                                        string ms = "";
-                                        foreach (string s in msg1)
-                                        {
-                                            ms += s + "|";
-                                        }
-                                        //ms checi shavad ka dorost bashad
-                                        ms = ms.Remove(ms.Length - 1);
-                                        // sent message from Server Local To Server
-                                        sendMessageToServer(ms);
-                                    }
-
-                                    break;
-                                }
                             case "close":
                                 {
                                     lock (listlocker)
